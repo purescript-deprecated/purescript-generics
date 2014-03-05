@@ -3,6 +3,7 @@ module Main where
 import Prelude
 import Data.Generics
 import Data.Maybe
+import Data.String
 import Control.Monad.Eff
 
 data Expr 
@@ -20,6 +21,10 @@ instance genericExpr :: Generic Expr where
   unTerm (TmCon { con = "Main.App", values = [e1, e2] }) = App <$> unTerm e1 <*> unTerm e2
   unTerm _ = Nothing
 
+s :: Expr
+s = Lam "x" $ Lam "y" $ Lam "z" $ App (App (Var "x") (Var "z")) (App (Var "y") (Var "z"))
+
 main = do
   Debug.Trace.trace $ show $ typeOf (Proxy :: Proxy Expr)
-  Debug.Trace.trace $ show $ term (Lam "x" $ Var "x")
+  Debug.Trace.trace $ gshow s
+  Debug.Trace.trace $ gshow $ everywhere (mkT toUpper) s
