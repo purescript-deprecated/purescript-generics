@@ -72,11 +72,31 @@ instance genericArray :: (Generic a) => Generic [a] where
   unTerm _ = Nothing
 
 -- |
+-- Generic size
+--
+
+sizeOf :: Tm -> Number
+sizeOf (TmArr arr) = foldl (+) 0 (map sizeOf arr)
+sizeOf (TmObj obj) = foldl (+) 0 (map (\p -> sizeOf p.value) obj)
+sizeOf (TmCon con) = foldl (+) 0 (map sizeOf con.values)
+sizeOf _ = 1
+
+gsize :: forall a. (Generic a) => a -> Number
+gsize a = sizeOf (term a)
+
+-- |
 -- Generic Show
 --
 
 gshow :: forall a. (Generic a) => a -> String
 gshow a = show (term a)
+
+-- |
+-- Generic cast
+--
+
+cast :: forall a b. (Generic a, Generic b) => a -> Maybe b
+cast a = unTerm (term a)
 
 -- |
 -- Generic transformations
@@ -86,9 +106,6 @@ data GenericT = GenericT (Tm -> Tm)
 
 runGenericT :: GenericT -> Tm -> Tm
 runGenericT (GenericT f) tm = f tm
-
-cast :: forall a b. (Generic a, Generic b) => a -> Maybe b
-cast a = unTerm (term a)
 
 mkT :: forall a. (Generic a) => (a -> a) -> GenericT
 mkT f = GenericT $ \t -> fromMaybe t $ do
@@ -114,3 +131,27 @@ everywhereImpl _ other = other
 everywhere :: forall a. (Generic a) => GenericT -> a -> a
 everywhere f a = case unTerm (everywhereImpl f (term a)) of
   Just a -> a
+
+-- |
+-- Generic queries
+--
+
+data GenericQ r = GenericQ (Tm -> r)
+
+runGenericQ :: forall r. GenericQ r -> Tm -> r
+runGenericQ (GenericQ f) tm = f tm
+
+mkQ :: forall a r. (Generic a) => r -> (a -> r) -> GenericQ r
+mkQ r f = GenericQ $ \t -> fromMaybe r $ do
+  a <- unTerm t
+  return $ f a
+
+everythingImpl :: forall a r. (r -> r -> r) -> GenericQ r -> Tm -> r
+everythingImpl (+) f t@(TmArr arr) = foldl (+) (runGenericQ f t) (map (everythingImpl (+) f) arr)
+everythingImpl (+) f t@(TmObj fs) = foldl (+) (runGenericQ f t) (map (\p -> everythingImpl (+) f p.value) fs)
+everythingImpl (+) f t@(TmCon c) = foldl (+) (runGenericQ f t) (map (everythingImpl (+) f) c.values)
+everythingImpl _ f other = runGenericQ f other
+
+everything :: forall a r. (Generic a) => (r -> r -> r) -> GenericQ r -> a -> r
+everything (+) f a = everythingImpl (+) f (term a)
+

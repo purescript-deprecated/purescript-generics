@@ -3,6 +3,7 @@ module Main where
 import Prelude
 import Data.Generics
 import Data.Maybe
+import Data.Array
 import Data.String
 import Control.Monad.Eff
 
@@ -26,5 +27,13 @@ s = Lam "x" $ Lam "y" $ Lam "z" $ App (App (Var "x") (Var "z")) (App (Var "y") (
 
 main = do
   Debug.Trace.trace $ show $ typeOf (Proxy :: Proxy Expr)
+  -- Generic show
   Debug.Trace.trace $ gshow s
+  -- Generic size
+  Debug.Trace.trace $ show $ gsize s
+  -- Make all Vars upper case
   Debug.Trace.trace $ gshow $ everywhere (mkT toUpper) s
+  -- Count the occurrences of Var
+  Debug.Trace.trace $ show $ everything concat (mkQ [] \e -> case e of 
+    Var v -> [v]
+    _ -> []) s
