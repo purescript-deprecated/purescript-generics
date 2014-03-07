@@ -39,44 +39,44 @@
 
 ### Type Class Instances
 
-    (Generic ((a))) => instance genericArray :: Generic ([a])
+    instance genericArray :: (Generic a) => Generic [a]
 
-    instance genericBoolean :: Generic (Prim.Boolean)
+    instance genericBoolean :: Generic Prim.Boolean
 
-    instance genericNumber :: Generic (Prim.Number)
+    instance genericNumber :: Generic Prim.Number
 
-    instance genericString :: Generic (Prim.String)
+    instance genericString :: Generic Prim.String
 
-    instance showTm :: Show (Tm)
+    instance showTm :: Show Tm
 
-    instance showTy :: Show (Ty)
+    instance showTy :: Show Ty
 
 
 ### Values
 
-    cast :: forall b. forall a. (Generic (a),Generic (b)) => a -> Maybe b
+    cast :: forall a b. (Generic a, Generic b) => a -> Maybe b
 
     elementProxy :: forall a. Proxy [a] -> Proxy a
 
-    everything :: forall r. forall a. (Generic (a)) => (r -> r -> r) -> GenericQ r -> a -> r
+    everything :: forall a r. (Generic a) => (r -> r -> r) -> GenericQ r -> a -> r
 
-    everythingImpl :: forall r. forall a. (r -> r -> r) -> GenericQ r -> Tm -> r
+    everythingImpl :: forall a r. (r -> r -> r) -> GenericQ r -> Tm -> r
 
-    everywhere :: forall a. (Generic (a)) => GenericT -> a -> a
+    everywhere :: forall a. (Generic a) => GenericT -> a -> a
 
     everywhereImpl :: GenericT -> Tm -> Tm
 
-    gmapT :: forall a. (Generic (a)) => GenericT -> a -> a
+    gmapT :: forall a. (Generic a) => GenericT -> a -> a
 
     gmapTImpl :: GenericT -> Tm -> Tm
 
-    gshow :: forall a. (Generic (a)) => a -> Prim.String
+    gshow :: forall a. (Generic a) => a -> Prim.String
 
-    gsize :: forall a. (Generic (a)) => a -> Prim.Number
+    gsize :: forall a. (Generic a) => a -> Prim.Number
 
-    mkQ :: forall r. forall a. (Generic (a)) => r -> (a -> r) -> GenericQ r
+    mkQ :: forall a r. (Generic a) => r -> (a -> r) -> GenericQ r
 
-    mkT :: forall a. (Generic (a)) => (a -> a) -> GenericT
+    mkT :: forall a. (Generic a) => (a -> a) -> GenericT
 
     runGenericQ :: forall r. GenericQ r -> Tm -> r
 
