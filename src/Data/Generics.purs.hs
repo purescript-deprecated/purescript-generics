@@ -3,7 +3,8 @@ module Data.Generics where
 import Prelude
 import Data.Maybe
 import Data.Array
-import Control.Monad
+import Data.Foldable
+import Data.Traversable
 
 data Ty
   = TyNum
@@ -68,7 +69,7 @@ elementProxy _ = Proxy
 instance genericArray :: (Generic a) => Generic [a] where
   typeOf p = TyArr (typeOf (elementProxy p))
   term arr = TmArr $ map term arr
-  unTerm (TmArr arr) = mapM unTerm arr
+  unTerm (TmArr arr) = traverse unTerm arr
   unTerm _ = Nothing
 
 -- |
