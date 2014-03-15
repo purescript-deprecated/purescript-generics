@@ -1,8 +1,10 @@
 module Data.Generics where
 
 import Prelude
-import Data.Maybe
 import Data.Array
+import Data.Either
+import Data.Maybe
+import Data.Tuple
 import Data.Foldable
 import Data.Traversable
 
@@ -95,6 +97,43 @@ instance genericArray :: (Generic a) => Generic [a] where
   typeOf p = TyArr (typeOf (elementProxy p))
   term arr = TmArr $ map term arr
   unTerm (TmArr arr) = traverse unTerm arr
+  unTerm _ = Nothing
+  
+fstProxy :: forall a b. Proxy (Tuple a b) -> Proxy a
+fstProxy _ = Proxy
+
+sndProxy :: forall a b. Proxy (Tuple a b) -> Proxy b
+sndProxy _ = Proxy
+  
+instance genericTuple :: (Generic a, Generic b) => Generic (Tuple a b) where
+  typeOf p = TyCon { tyCon: "Data.Tuple.Tuple", args: [typeOf $ fstProxy p, typeOf $ sndProxy p] }
+  term (Tuple x y) = TmCon { con: "Data.Tuple.Tuple", values: [term x, term y] }
+  unTerm (TmCon { con = "Data.Tuple.Tuple", values = [x, y] }) = Tuple <$> unTerm x <*> unTerm y
+  unTerm _ = Nothing
+  
+maybeProxy :: forall a. Proxy (Maybe a) -> Proxy a
+maybeProxy _ = Proxy
+  
+instance genericMaybe :: (Generic a) => Generic (Maybe a) where
+  typeOf p = TyCon { tyCon: "Data.Maybe.Maybe", args: [typeOf $ maybeProxy p] }
+  term (Just x) = TmCon { con: "Data.Maybe.Just", values: [term x] }
+  term Nothing = TmCon { con: "Data.Maybe.Nothing", values: [] }
+  unTerm (TmCon { con = "Data.Maybe.Just", values = [x] }) = Just <$> unTerm x
+  unTerm (TmCon { con = "Data.Maybe.Nothing" }) = Just Nothing
+  unTerm _ = Nothing
+  
+leftProxy :: forall a b. Proxy (Either a b) -> Proxy a
+leftProxy _ = Proxy
+
+rightProxy :: forall a b. Proxy (Either a b) -> Proxy b
+rightProxy _ = Proxy
+  
+instance genericEither :: (Generic a, Generic b) => Generic (Either a b) where
+  typeOf p = TyCon { tyCon: "Data.Either.Either", args: [typeOf $ leftProxy p, typeOf $ rightProxy p] }
+  term (Left l) = TmCon { con: "Data.Either.Left", values: [term l] }
+  term (Right r) = TmCon { con: "Data.Either.Right", values: [term r] }
+  unTerm (TmCon { con = "Data.Either.Left", values = [l] }) = Left <$> unTerm l
+  unTerm (TmCon { con = "Data.Either.Right", values = [r] }) = Right <$> unTerm r
   unTerm _ = Nothing
 
 -- |
