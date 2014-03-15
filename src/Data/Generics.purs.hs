@@ -21,6 +21,16 @@ instance showTy :: Show Ty where
   show (TyArr el) = "[" ++ show el ++ "]"
   show (TyObj fs) = "{ " ++ joinWith (map (\f -> f.key ++ " :: " ++ show f.value) fs) ", " ++ " }"
   show (TyCon c) = joinWith (c.tyCon : map (\ty -> "(" ++ show ty ++ ")") c.args) " "
+  
+instance eqTy :: Eq Ty where
+  (==) TyNum       TyNum       = true
+  (==) TyStr       TyStr       = true
+  (==) TyBool      TyBool      = true
+  (==) (TyObj es1) (TyObj es2) = all id (zipWith eqObjEntry es1 es2)
+  (==) (TyCon { tyCon = ty1, args = as1 }) 
+       (TyCon { tyCon = ty2, args = as2 }) = ty1 == ty2 && as1 == as2
+  (==) _ _ = false
+  (/=) x y = not (x == y)
 
 data Tm 
   = TmNum Number
@@ -37,6 +47,21 @@ instance showTm :: Show Tm where
   show (TmArr arr) = "[" ++ joinWith (map show arr) ", " ++ "]"
   show (TmObj fs) = "{ " ++ joinWith (map (\f -> f.key ++ ": " ++ show f.value) fs) ", " ++ " }"
   show (TmCon c) = joinWith (c.con : map (\tm -> "(" ++ show tm ++ ")") c.values) " "
+  
+instance eqTm :: Eq Tm where
+  (==) (TmNum n1)   (TmNum n2)   = n1 == n2
+  (==) (TmStr s1)   (TmStr s2)   = s1 == s2
+  (==) (TmBool b1)  (TmBool b2)  = b1 == b2
+  (==) (TmArr arr1) (TmArr arr2) = arr1 == arr2
+  (==) (TmObj es1)  (TmObj es2)  = all id (zipWith eqObjEntry es1 es2)
+  (==) (TmCon { con = t1, values = vs1 }) 
+       (TmCon { con = t2, values = vs2 }) = t1 == t2 && vs1 == vs2
+  (==) _ _ = false
+  (/=) x y = not (x == y)
+  
+eqObjEntry :: forall k v. (Eq k, Eq v) => { key :: k, value :: v } -> { key :: k, value :: v } -> Boolean
+eqObjEntry { key = k1, value = v1 }
+           { key = k2, value = v2 } = k1 == k2 && v1 == v2
   
 data Proxy a = Proxy
 
@@ -91,6 +116,13 @@ gsize a = sizeOf (term a)
 
 gshow :: forall a. (Generic a) => a -> String
 gshow a = show (term a)
+
+-- |
+-- Generic equality
+--
+
+geq :: forall a. (Generic a) => a -> a -> Boolean
+geq a b = (term a) == (term b)
 
 -- |
 -- Generic cast
