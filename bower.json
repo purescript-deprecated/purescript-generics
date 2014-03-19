@@ -16,5 +16,12 @@
     "bower_components",
     "externs",
     "js"
-  ]
+  ],
+  "dependencies": {
+    "purescript-arrays": "*",
+    "purescript-either": "*",
+    "purescript-maybe": "*",
+    "purescript-tuples": "*",
+    "purescript-foldable-traversable": "*"
+  }
 }
