@@ -1,5 +1,5 @@
 {
-  "name": "purescript-control",
+  "name": "purescript-generics",
   "version": "0.0.0",
   "devDependencies": {
     "grunt": "~0.4.4",
