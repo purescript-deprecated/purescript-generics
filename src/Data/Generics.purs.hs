@@ -195,10 +195,10 @@ gmapT f a = case unTerm (gmapTImpl f (term a)) of
   Just a -> a
 
 everywhereImpl :: GenericT -> Tm -> Tm
-everywhereImpl f (TmArr arr) = TmArr $ map (runGenericT f <<< everywhereImpl f) arr
-everywhereImpl f (TmObj fs) = TmObj $ map (\p -> { key: p.key, value: runGenericT f (everywhereImpl f p.value) }) fs
-everywhereImpl f (TmCon c) = TmCon { con: c.con, values: map (runGenericT f <<< everywhereImpl f) c.values }
-everywhereImpl _ other = other
+everywhereImpl f (TmArr arr) = runGenericT f $ TmArr $ map (everywhereImpl f) arr
+everywhereImpl f (TmObj fs) = runGenericT f $ TmObj $ map (\p -> { key: p.key, value: everywhereImpl f p.value }) fs
+everywhereImpl f (TmCon c) = runGenericT f $ TmCon { con: c.con, values: map (everywhereImpl f) c.values }
+everywhereImpl f other = runGenericT f other
 
 everywhere :: forall a. (Generic a) => GenericT -> a -> a
 everywhere f a = case unTerm (everywhereImpl f (term a)) of
