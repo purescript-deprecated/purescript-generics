@@ -1,9 +1,10 @@
 module Data.Generics where
 
 import Prelude
-import Data.Array
+import Data.Array (map, zipWith)
 import Data.Either
 import Data.Maybe
+import Data.String (joinWith)
 import Data.Tuple
 import Data.Foldable
 import Data.Traversable
