@@ -4,7 +4,7 @@ import Prelude
 import Data.Generics
 import Data.Maybe
 import Data.Array
-import Data.String
+import Data.String (toUpper)
 import Control.Monad.Eff
 
 data Expr 
@@ -34,6 +34,6 @@ main = do
   -- Make all Vars upper case
   Debug.Trace.trace $ gshow $ everywhere (mkT toUpper) s
   -- Count the occurrences of Var
-  Debug.Trace.trace $ show $ everything concat (mkQ [] \e -> case e of 
+  Debug.Trace.trace $ show $ everything (++) (mkQ [] \e -> case e of 
     Var v -> [v]
     _ -> []) s

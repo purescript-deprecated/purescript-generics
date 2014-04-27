@@ -4,7 +4,7 @@ import Prelude
 import Data.Array (map, zipWith)
 import Data.Either
 import Data.Maybe
-import Data.String (joinWith)
+import qualified Data.String as S
 import Data.Tuple
 import Data.Foldable
 import Data.Traversable
@@ -22,8 +22,8 @@ instance showTy :: Show Ty where
   show TyStr = "String"
   show TyBool = "Boolean"
   show (TyArr el) = "[" ++ show el ++ "]"
-  show (TyObj fs) = "{ " ++ joinWith (map (\f -> f.key ++ " :: " ++ show f.value) fs) ", " ++ " }"
-  show (TyCon c) = joinWith (c.tyCon : map (\ty -> "(" ++ show ty ++ ")") c.args) " "
+  show (TyObj fs) = "{ " ++ S.joinWith ", " (map (\f -> f.key ++ " :: " ++ show f.value) fs) ++ " }"
+  show (TyCon c) = S.joinWith " "(c.tyCon : map (\ty -> "(" ++ show ty ++ ")") c.args) 
   
 instance eqTy :: Eq Ty where
   (==) TyNum       TyNum       = true
@@ -47,9 +47,9 @@ instance showTm :: Show Tm where
   show (TmNum n) = show n
   show (TmStr s) = show s
   show (TmBool b) = show b
-  show (TmArr arr) = "[" ++ joinWith (map show arr) ", " ++ "]"
-  show (TmObj fs) = "{ " ++ joinWith (map (\f -> f.key ++ ": " ++ show f.value) fs) ", " ++ " }"
-  show (TmCon c) = joinWith (c.con : map (\tm -> "(" ++ show tm ++ ")") c.values) " "
+  show (TmArr arr) = "[" ++ S.joinWith ", " (map show arr) ++ "]"
+  show (TmObj fs) = "{ " ++ S.joinWith ", " (map (\f -> f.key ++ ": " ++ show f.value) fs)  ++ " }"
+  show (TmCon c) = S.joinWith " " (c.con : map (\tm -> "(" ++ show tm ++ ")") c.values) 
   
 instance eqTm :: Eq Tm where
   (==) (TmNum n1)   (TmNum n2)   = n1 == n2
