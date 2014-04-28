@@ -1,7 +1,7 @@
 {
-  "name": "purescript-arrays",
-  "homepage": "https://github.com/purescript/purescript-arrays",
-  "description": "Array utility functions",
+  "name": "purescript-generics",
+  "homepage": "https://github.com/purescript-contrib/purescript-generics",
+  "description": "Generic programming",
   "keywords": [
     "purescript"
   ],
@@ -18,11 +18,11 @@
     "package.json"
   ],
   "dependencies": {
-    "purescript-maybe": "*",
     "purescript-arrays": "*",
     "purescript-either": "*",
+    "purescript-foldable-traversable": "*",
+    "purescript-maybe": "*",
     "purescript-strings": "*",
-    "purescript-tuples": "*",
-    "purescript-foldable-traversable": "*"
+    "purescript-tuples": "*"
   }
 }
