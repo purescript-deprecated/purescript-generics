@@ -1,26 +1,27 @@
 {
-  "name": "purescript-generics",
-  "version": "0.0.0",
-  "homepage": "https://github.com/purescript/purescript-generics",
-  "authors": [
-    "Phil Freeman <paf31@cantab.net>"
-  ],
-  "description": "PureScript generic programming",
+  "name": "purescript-arrays",
+  "homepage": "https://github.com/purescript/purescript-arrays",
+  "description": "Array utility functions",
   "keywords": [
     "purescript"
   ],
   "license": "MIT",
   "ignore": [
     "**/.*",
-    "node_modules",
     "bower_components",
-    "externs",
-    "js"
+    "node_modules",
+    "output",
+    "tests",
+    "tmp",
+    "bower.json",
+    "Gruntfile.js",
+    "package.json"
   ],
   "dependencies": {
+    "purescript-maybe": "*",
     "purescript-arrays": "*",
     "purescript-either": "*",
-    "purescript-maybe": "*",
+    "purescript-strings": "*",
     "purescript-tuples": "*",
     "purescript-foldable-traversable": "*"
   }
