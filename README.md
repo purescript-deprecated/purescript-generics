@@ -5,29 +5,29 @@
 ### Types
 
     data GenericQ r where
-      GenericQ :: Tm -> r -> GenericQ r
+      GenericQ :: (Tm -> r) -> GenericQ r
 
-    data GenericT  where
-      GenericT :: Tm -> Tm -> GenericT 
+    data GenericT where
+      GenericT :: (Tm -> Tm) -> GenericT
 
     data Proxy a where
       Proxy :: Proxy a
 
-    data Tm  where
-      TmNum :: Prim.Number -> Tm 
-      TmStr :: Prim.String -> Tm 
-      TmBool :: Prim.Boolean -> Tm 
-      TmArr :: [Tm] -> Tm 
-      TmObj :: [{ value :: Tm, key :: Prim.String }] -> Tm 
-      TmCon :: { values :: [Tm], con :: Prim.String } -> Tm 
+    data Tm where
+      TmNum :: Number -> Tm
+      TmStr :: String -> Tm
+      TmBool :: Boolean -> Tm
+      TmArr :: [Tm] -> Tm
+      TmObj :: [{ value :: Tm, key :: String }] -> Tm
+      TmCon :: { values :: [Tm], con :: String } -> Tm
 
-    data Ty  where
-      TyNum :: Ty 
-      TyStr :: Ty 
-      TyBool :: Ty 
-      TyArr :: Ty -> Ty 
-      TyObj :: [{ value :: Ty, key :: Prim.String }] -> Ty 
-      TyCon :: { args :: [Ty], tyCon :: Prim.String } -> Ty 
+    data Ty where
+      TyNum :: Ty
+      TyStr :: Ty
+      TyBool :: Ty
+      TyArr :: Ty -> Ty
+      TyObj :: [{ value :: Ty, key :: String }] -> Ty
+      TyCon :: { args :: [Ty], tyCon :: String } -> Ty
 
 
 ### Type Classes
@@ -46,15 +46,15 @@
 
     instance genericArray :: (Generic a) => Generic [a]
 
-    instance genericBoolean :: Generic Prim.Boolean
+    instance genericBoolean :: Generic Boolean
 
     instance genericEither :: (Generic a, Generic b) => Generic (Either a b)
 
     instance genericMaybe :: (Generic a) => Generic (Maybe a)
 
-    instance genericNumber :: Generic Prim.Number
+    instance genericNumber :: Generic Number
 
-    instance genericString :: Generic Prim.String
+    instance genericString :: Generic String
 
     instance genericTuple :: (Generic a, Generic b) => Generic (Tuple a b)
 
@@ -69,7 +69,7 @@
 
     elementProxy :: forall a. Proxy [a] -> Proxy a
 
-    eqObjEntry :: forall k v. (Eq k, Eq v) => { value :: v, key :: k } -> { value :: v, key :: k } -> Prim.Boolean
+    eqObjEntry :: forall k v. (Eq k, Eq v) => { value :: v, key :: k } -> { value :: v, key :: k } -> Boolean
 
     everything :: forall a r. (Generic a) => (r -> r -> r) -> GenericQ r -> a -> r
 
@@ -81,15 +81,15 @@
 
     fstProxy :: forall a b. Proxy (Tuple a b) -> Proxy a
 
-    geq :: forall a. (Generic a) => a -> a -> Prim.Boolean
+    geq :: forall a. (Generic a) => a -> a -> Boolean
 
     gmapT :: forall a. (Generic a) => GenericT -> a -> a
 
     gmapTImpl :: GenericT -> Tm -> Tm
 
-    gshow :: forall a. (Generic a) => a -> Prim.String
+    gshow :: forall a. (Generic a) => a -> String
 
-    gsize :: forall a. (Generic a) => a -> Prim.Number
+    gsize :: forall a. (Generic a) => a -> Number
 
     leftProxy :: forall a b. Proxy (Either a b) -> Proxy a
 
@@ -105,6 +105,6 @@
 
     runGenericT :: GenericT -> Tm -> Tm
 
-    sizeOf :: Tm -> Prim.Number
+    sizeOf :: Tm -> Number
 
     sndProxy :: forall a b. Proxy (Tuple a b) -> Proxy b
