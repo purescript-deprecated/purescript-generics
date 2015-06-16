@@ -1,230 +1,196 @@
-module Data.Generics where
-
+module Data.Generics
+  (Generic, toSpine, toSignature, fromSpine,
+   GenericSpine(..),
+   GenericSignature(..),
+   Proxy(..),
+   anyProxy,
+   gShow,
+   gEq,
+   gCompare
+  ) where
 import Prelude
-import Data.Array (map, zipWith)
 import Data.Either
 import Data.Maybe
 import qualified Data.String as S
 import Data.Tuple
-import Data.Foldable
 import Data.Traversable
+import Data.Array
+import Data.Int
+import Data.Monoid.Conj
+import Data.Foldable
+import Data.String (joinWith)
 
-data Ty
-  = TyNum
-  | TyStr
-  | TyBool
-  | TyArr Ty
-  | TyObj [{ key :: String, value :: Ty }]
-  | TyCon { tyCon :: String, args :: [Ty] }
+-- | A GenericSpine is a universal represntation of an arbitrary data structure (that does not contain function arrows).
+data GenericSpine = SProd String (Array (Unit -> GenericSpine))
+                  | SRecord (Array {recLabel :: String, recValue :: Unit -> GenericSpine})
+                  | SNumber Number
+                  | SInt Int
+                  | SString String
+                  | SArray (Array (Unit -> GenericSpine))
 
-instance showTy :: Show Ty where
-  show TyNum = "Number"
-  show TyStr = "String"
-  show TyBool = "Boolean"
-  show (TyArr el) = "[" ++ show el ++ "]"
-  show (TyObj fs) = "{ " ++ S.joinWith ", " (map (\f -> f.key ++ " :: " ++ show f.value) fs) ++ " }"
-  show (TyCon c) = S.joinWith " "(c.tyCon : map (\ty -> "(" ++ show ty ++ ")") c.args) 
-  
-instance eqTy :: Eq Ty where
-  (==) TyNum       TyNum       = true
-  (==) TyStr       TyStr       = true
-  (==) TyBool      TyBool      = true
-  (==) (TyObj es1) (TyObj es2) = all id (zipWith eqObjEntry es1 es2)
-  (==) (TyCon { tyCon = ty1, args = as1 }) 
-       (TyCon { tyCon = ty2, args = as2 }) = ty1 == ty2 && as1 == as2
-  (==) _ _ = false
-  (/=) x y = not (x == y)
+-- | A GenericSignature is a universal representation of the structure of an arbitrary data structure (that does not contain function arrows).
+data GenericSignature = SigProd (Array {sigConstructor :: String, sigValues :: Array (Unit -> GenericSignature)})
+                      | SigRecord (Array {recLabel :: String, recValue :: Unit -> GenericSignature})
+                      | SigNumber | SigInt | SigString | SigArray (Unit -> GenericSignature)
 
-data Tm 
-  = TmNum Number
-  | TmStr String
-  | TmBool Boolean
-  | TmArr [Tm]
-  | TmObj [{ key :: String, value :: Tm }]
-  | TmCon { con :: String, values :: [Tm] }
-
-instance showTm :: Show Tm where
-  show (TmNum n) = show n
-  show (TmStr s) = show s
-  show (TmBool b) = show b
-  show (TmArr arr) = "[" ++ S.joinWith ", " (map show arr) ++ "]"
-  show (TmObj fs) = "{ " ++ S.joinWith ", " (map (\f -> f.key ++ ": " ++ show f.value) fs)  ++ " }"
-  show (TmCon c) = S.joinWith " " (c.con : map (\tm -> "(" ++ show tm ++ ")") c.values) 
-  
-instance eqTm :: Eq Tm where
-  (==) (TmNum n1)   (TmNum n2)   = n1 == n2
-  (==) (TmStr s1)   (TmStr s2)   = s1 == s2
-  (==) (TmBool b1)  (TmBool b2)  = b1 == b2
-  (==) (TmArr arr1) (TmArr arr2) = arr1 == arr2
-  (==) (TmObj es1)  (TmObj es2)  = all id (zipWith eqObjEntry es1 es2)
-  (==) (TmCon { con = t1, values = vs1 }) 
-       (TmCon { con = t2, values = vs2 }) = t1 == t2 && vs1 == vs2
-  (==) _ _ = false
-  (/=) x y = not (x == y)
-  
-eqObjEntry :: forall k v. (Eq k, Eq v) => { key :: k, value :: v } -> { key :: k, value :: v } -> Boolean
-eqObjEntry { key = k1, value = v1 }
-           { key = k2, value = v2 } = k1 == k2 && v1 == v2
-  
+-- | A proxy is a simple placeholder data type to allow us to pass type-level data at runtime.
 data Proxy a = Proxy
 
+anyProxy :: forall a. Proxy a
+anyProxy = Proxy
+
+-- | The Generic typeclass provides methods for sending data to/from spine representations, as well as querying about the signatures of spine representations.
 class Generic a where
-  typeOf :: Proxy a -> Ty
-  term :: a -> Tm
-  unTerm :: Tm -> Maybe a
-  
+    toSpine :: a -> GenericSpine
+    toSignature :: Proxy a -> GenericSignature
+    fromSpine :: GenericSpine -> Maybe a
+
 instance genericNumber :: Generic Number where
-  typeOf _ = TyNum
-  term = TmNum
-  unTerm (TmNum n) = Just n
-  unTerm _ = Nothing
-  
+    toSpine x = SNumber x
+    toSignature _ = SigNumber
+    fromSpine (SNumber n) = Just n
+    fromSpine _ = Nothing
+
+instance genericInt :: Generic Int where
+    toSpine x = SInt x
+    toSignature _ = SigInt
+    fromSpine (SInt n) = Just n
+    fromSpine _ = Nothing
+
 instance genericString :: Generic String where
-  typeOf _ = TyStr
-  term = TmStr
-  unTerm (TmStr s) = Just s
-  unTerm _ = Nothing
-  
-instance genericBoolean :: Generic Boolean where
-  typeOf _ = TyBool
-  term = TmBool
-  unTerm (TmBool b) = Just b
-  unTerm _ = Nothing
- 
-elementProxy :: forall a. Proxy [a] -> Proxy a
-elementProxy _ = Proxy
- 
-instance genericArray :: (Generic a) => Generic [a] where
-  typeOf p = TyArr (typeOf (elementProxy p))
-  term arr = TmArr $ map term arr
-  unTerm (TmArr arr) = traverse unTerm arr
-  unTerm _ = Nothing
-  
-fstProxy :: forall a b. Proxy (Tuple a b) -> Proxy a
-fstProxy _ = Proxy
+    toSpine x = SString x
+    toSignature _ = SigString
+    fromSpine (SString s) = Just s
+    fromSpine _ = Nothing
 
-sndProxy :: forall a b. Proxy (Tuple a b) -> Proxy b
-sndProxy _ = Proxy
-  
+instance genericBool :: Generic Boolean where
+    toSpine true = SProd "true" []
+    toSpine false = SProd "false" []
+    toSignature _ = SigProd [{sigConstructor: "true",sigValues: []},
+                             {sigConstructor: "false",sigValues: []}]
+    fromSpine (SProd "true" [])  = Just true
+    fromSpine (SProd "false" []) = Just false
+    fromSpine _ = Nothing
+
+instance genericArray :: (Generic a) => Generic (Array a) where
+    toSpine xs = SArray ((\x y -> toSpine x) <$> xs)
+    toSignature x = SigArray (\unit -> toSignature (lowerProxy x))
+        where lowerProxy :: Proxy (Array a) -> Proxy a
+              lowerProxy Proxy = (anyProxy :: Proxy a)
+
+    fromSpine (SArray x) = traverse (fromSpine <<< ($ unit)) x
+    fromSpine _ = Nothing
+
 instance genericTuple :: (Generic a, Generic b) => Generic (Tuple a b) where
-  typeOf p = TyCon { tyCon: "Data.Tuple.Tuple", args: [typeOf $ fstProxy p, typeOf $ sndProxy p] }
-  term (Tuple x y) = TmCon { con: "Data.Tuple.Tuple", values: [term x, term y] }
-  unTerm (TmCon { con = "Data.Tuple.Tuple", values = [x, y] }) = Tuple <$> unTerm x <*> unTerm y
-  unTerm _ = Nothing
-  
-maybeProxy :: forall a. Proxy (Maybe a) -> Proxy a
-maybeProxy _ = Proxy
-  
+      toSpine (Tuple x y) = SProd "Data.Tuple.Tuple" [\u -> toSpine x, \u -> toSpine y]
+
+      toSignature x = SigProd [{sigConstructor: "Data.Tuple.Tuple", sigValues: [\u -> toSignature (fstProxy x), \u -> toSignature (sndProxy x)]}]
+                    where fstProxy :: Proxy (Tuple a b) -> Proxy a
+                          fstProxy Proxy = (anyProxy :: Proxy a)
+                          sndProxy :: Proxy (Tuple a b) -> Proxy b
+                          sndProxy Proxy = (anyProxy :: Proxy b)
+
+      fromSpine (SProd "Data.Tuple.Tuple" [x,y]) = Tuple <$> fromSpine (x unit) <*> fromSpine (y unit)
+      fromSpine _ = Nothing
+
 instance genericMaybe :: (Generic a) => Generic (Maybe a) where
-  typeOf p = TyCon { tyCon: "Data.Maybe.Maybe", args: [typeOf $ maybeProxy p] }
-  term (Just x) = TmCon { con: "Data.Maybe.Just", values: [term x] }
-  term Nothing = TmCon { con: "Data.Maybe.Nothing", values: [] }
-  unTerm (TmCon { con = "Data.Maybe.Just", values = [x] }) = Just <$> unTerm x
-  unTerm (TmCon { con = "Data.Maybe.Nothing" }) = Just Nothing
-  unTerm _ = Nothing
-  
-leftProxy :: forall a b. Proxy (Either a b) -> Proxy a
-leftProxy _ = Proxy
+      toSpine (Just x) = SProd "Data.Maybe.Just" [\u -> toSpine x]
+      toSpine Nothing = SProd "Data.Maybe.Nothing" []
+      toSignature x = SigProd [{sigConstructor: "Data.Maybe.Just",sigValues: [\u -> toSignature (mbProxy x)]},
+                               {sigConstructor: "Data.Maybe.Nothing",sigValues:[]}]
+          where mbProxy :: Proxy (Maybe a) -> Proxy a
+                mbProxy Proxy = (anyProxy :: Proxy a)
+      fromSpine (SProd "Data.Maybe.Just" [x]) = Just <$> fromSpine (x unit)
+      fromSpine (SProd "Data.Maybe.Nothing" []) = return Nothing
+      fromSpine _ = Nothing
 
-rightProxy :: forall a b. Proxy (Either a b) -> Proxy b
-rightProxy _ = Proxy
-  
 instance genericEither :: (Generic a, Generic b) => Generic (Either a b) where
-  typeOf p = TyCon { tyCon: "Data.Either.Either", args: [typeOf $ leftProxy p, typeOf $ rightProxy p] }
-  term (Left l) = TmCon { con: "Data.Either.Left", values: [term l] }
-  term (Right r) = TmCon { con: "Data.Either.Right", values: [term r] }
-  unTerm (TmCon { con = "Data.Either.Left", values = [l] }) = Left <$> unTerm l
-  unTerm (TmCon { con = "Data.Either.Right", values = [r] }) = Right <$> unTerm r
-  unTerm _ = Nothing
+    toSpine (Left x) = SProd "Data.Either.Left" [\u -> toSpine x]
+    toSpine (Right x) = SProd "Data.Either.Right" [\u -> toSpine x]
+    toSignature x = SigProd [{sigConstructor: "Data.Either.Left",  sigValues: [\u -> toSignature (lproxy x)]},
+                             {sigConstructor: "Data.Either.Right", sigValues: [\u -> toSignature (rproxy x)]}]
+          where lproxy :: Proxy (Either a b) -> Proxy a
+                lproxy Proxy = (anyProxy :: Proxy a)
+                rproxy :: Proxy (Either a b) -> Proxy b
+                rproxy Proxy = (anyProxy :: Proxy b)
+    fromSpine (SProd "Data.Either.Left"  [x]) = Left  <$> fromSpine (x unit)
+    fromSpine (SProd "Data.Either.Right" [x]) = Right <$> fromSpine (x unit)
+    fromSpine _ = Nothing
 
--- |
--- Generic size
---
 
-sizeOf :: Tm -> Number
-sizeOf (TmArr arr) = foldl (+) 0 (map sizeOf arr)
-sizeOf (TmObj obj) = foldl (+) 0 (map (\p -> sizeOf p.value) obj)
-sizeOf (TmCon con) = foldl (+) 0 (map sizeOf con.values)
-sizeOf _ = 1
+--- Generic Functions
+genericShowPrec :: Int -> GenericSpine -> String
+genericShowPrec d (SProd s arr) =
+    if null arr
+    then s
+    else showParen (d > 10) $ s <> " " <> joinWith " " (map (\x -> genericShowPrec 11 (x unit)) arr)
+  where showParen false x = x
+        showParen true  x = "(" <> x <> ")"
 
-gsize :: forall a. (Generic a) => a -> Number
-gsize a = sizeOf (term a)
+genericShowPrec d (SRecord xs) = "{" <> joinWith ", " (map (\x -> x.recLabel <> ": " <> genericShowPrec 0 (x.recValue unit)) xs) <> "}"
 
--- |
--- Generic Show
---
+genericShowPrec d (SInt x)    = show x
+genericShowPrec d (SNumber x) = show x
+genericShowPrec d (SString x) = show x
+genericShowPrec d (SArray xs) = "[" <> joinWith ", "  (map (\x -> genericShowPrec 0 (x unit)) xs) <> "]"
 
-gshow :: forall a. (Generic a) => a -> String
-gshow a = show (term a)
+-- | This function can be used as the default instance for Show for any instnace of Generic
+gShow :: forall a. (Generic a) => a -> String
+gShow = genericShowPrec 0 <<< toSpine
 
--- |
--- Generic equality
---
+foreign import zipAll :: forall a b c. (a -> b -> Boolean) -> Array a -> Array b -> Boolean
 
-geq :: forall a. (Generic a) => a -> a -> Boolean
-geq a b = (term a) == (term b)
+instance eqGeneric :: Eq GenericSpine where
+    eq (SProd s1 arr1) (SProd s2 arr2) = s1 == s2
+                                      && length arr1 == length arr2
+                                      && zipAll (\x y -> x unit == y unit) arr1 arr2
+    eq (SRecord xs) (SRecord ys) = length xs == length ys && zipAll go xs ys
+             where go x y = x.recLabel == y.recLabel && x.recValue unit == y.recValue unit
+    eq (SInt x) (SInt y) = x == y
+    eq (SNumber x) (SNumber y) = x == y
+    eq (SString x) (SString y) = x == y
+    eq (SArray xs) (SArray ys) = length xs == length ys && zipAll (\x y -> x unit == y unit) xs ys
 
--- |
--- Generic cast
---
+-- | This function can be used as the default instance for Eq for any instance of Generic
+gEq :: forall a. (Generic a) => a -> a -> Boolean
+gEq x y = toSpine x == toSpine y
 
-cast :: forall a b. (Generic a, Generic b) => a -> Maybe b
-cast a = unTerm (term a)
+foreign import zipCompare :: forall a b c. (a -> b -> Int) -> Array a -> Array b -> Int
 
--- |
--- Generic transformations
---
+instance ordGeneric :: Ord GenericSpine where
+    compare (SProd s1 arr1) (SProd s2 arr2) =
+        case compare s1 s2 of
+          EQ -> compare 0 $ zipCompare (\x y -> case compare (x unit) (y unit) of
+                                                  EQ -> 0
+                                                  LT -> 1
+                                                  GT -> -1) arr1 arr2
+          c1 -> c1
+    compare (SProd _ _) _ = LT
+    compare _ (SProd _ _) = GT
+    compare (SRecord xs) (SRecord ys) = compare 0 $ zipCompare go xs ys
+        where go x y = case compare x.recLabel y.recLabel of
+                         EQ -> case compare (x.recValue unit) (y.recValue unit) of
+                                 EQ -> 0
+                                 LT -> 1
+                                 GT -> -1
+                         LT -> 1
+                         GT -> -1
+    compare (SRecord _) _ = LT
+    compare _ (SRecord _) = GT
+    compare (SInt x) (SInt y) = compare x y
+    compare (SInt _) _ = LT
+    compare _ (SInt _) = GT
+    compare (SNumber x) (SNumber y) = compare x y
+    compare (SNumber _) _ = LT
+    compare _ (SNumber _) = GT
+    compare (SString x) (SString y) = compare x y
+    compare (SString _) _ = LT
+    compare _ (SString _) = GT
+    compare (SArray xs) (SArray ys) = compare 0 $ zipCompare (\x y -> case compare (x unit) (y unit) of
+                                                                        EQ -> 0
+                                                                        LT -> 1
+                                                                        GT -> -1) xs ys
 
-data GenericT = GenericT (Tm -> Tm)
-
-runGenericT :: GenericT -> Tm -> Tm
-runGenericT (GenericT f) tm = f tm
-
-mkT :: forall a. (Generic a) => (a -> a) -> GenericT
-mkT f = GenericT $ \t -> fromMaybe t $ do
-  a <- unTerm t
-  return $ term (f a)
-
-gmapTImpl :: GenericT -> Tm -> Tm
-gmapTImpl f (TmArr arr) = TmArr $ map (runGenericT f) arr
-gmapTImpl f (TmObj fs) = TmObj $ map (\p -> { key: p.key, value: runGenericT f (p.value) }) fs
-gmapTImpl f (TmCon c) = TmCon { con: c.con, values: map (runGenericT f) c.values }
-gmapTImpl _ other = other
-
-gmapT :: forall a. (Generic a) => GenericT -> a -> a
-gmapT f a = case unTerm (gmapTImpl f (term a)) of
-  Just a -> a
-
-everywhereImpl :: GenericT -> Tm -> Tm
-everywhereImpl f (TmArr arr) = runGenericT f $ TmArr $ map (everywhereImpl f) arr
-everywhereImpl f (TmObj fs) = runGenericT f $ TmObj $ map (\p -> { key: p.key, value: everywhereImpl f p.value }) fs
-everywhereImpl f (TmCon c) = runGenericT f $ TmCon { con: c.con, values: map (everywhereImpl f) c.values }
-everywhereImpl f other = runGenericT f other
-
-everywhere :: forall a. (Generic a) => GenericT -> a -> a
-everywhere f a = case unTerm (everywhereImpl f (term a)) of
-  Just a -> a
-
--- |
--- Generic queries
---
-
-data GenericQ r = GenericQ (Tm -> r)
-
-runGenericQ :: forall r. GenericQ r -> Tm -> r
-runGenericQ (GenericQ f) tm = f tm
-
-mkQ :: forall a r. (Generic a) => r -> (a -> r) -> GenericQ r
-mkQ r f = GenericQ $ \t -> fromMaybe r $ do
-  a <- unTerm t
-  return $ f a
-
-everythingImpl :: forall a r. (r -> r -> r) -> GenericQ r -> Tm -> r
-everythingImpl (+) f t@(TmArr arr) = foldl (+) (runGenericQ f t) (map (everythingImpl (+) f) arr)
-everythingImpl (+) f t@(TmObj fs) = foldl (+) (runGenericQ f t) (map (\p -> everythingImpl (+) f p.value) fs)
-everythingImpl (+) f t@(TmCon c) = foldl (+) (runGenericQ f t) (map (everythingImpl (+) f) c.values)
-everythingImpl _ f other = runGenericQ f other
-
-everything :: forall a r. (Generic a) => (r -> r -> r) -> GenericQ r -> a -> r
-everything (+) f a = everythingImpl (+) f (term a)
-
+-- | This function can be used as the default instance for the compare method of Ord for any instance of Generic
+gCompare :: forall a. (Generic a) => a -> a -> Ordering
+gCompare x y = compare (toSpine x) (toSpine y)
