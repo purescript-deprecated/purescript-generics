@@ -2,286 +2,99 @@
 
 ## Module Data.Generics
 
-#### `Ty`
+#### `GenericSpine`
 
 ``` purescript
-data Ty
-  = TyNum 
-  | TyStr 
-  | TyBool 
-  | TyArr Ty
-  | TyObj [{ value :: Ty, key :: String }]
-  | TyCon { args :: [Ty], tyCon :: String }
+data GenericSpine
+  = SProd String (Array (Unit -> GenericSpine))
+  | SRecord (Array { recLabel :: String, recValue :: Unit -> GenericSpine })
+  | SNumber Number
+  | SInt Int
+  | SString String
+  | SArray (Array (Unit -> GenericSpine))
 ```
 
+A GenericSpine is a universal represntation of an arbitrary data structure (that does not contain function arrows).
 
-#### `showTy`
+##### Instances
+``` purescript
+instance eqGeneric :: Eq GenericSpine
+instance ordGeneric :: Ord GenericSpine
+```
+
+#### `GenericSignature`
 
 ``` purescript
-instance showTy :: Show Ty
+data GenericSignature
+  = SigProd (Array { sigConstructor :: String, sigValues :: Array (Unit -> GenericSignature) })
+  | SigRecord (Array { recLabel :: String, recValue :: Unit -> GenericSignature })
+  | SigNumber
+  | SigInt
+  | SigString
+  | SigArray (Unit -> GenericSignature)
 ```
 
-
-#### `eqTy`
-
-``` purescript
-instance eqTy :: Eq Ty
-```
-
-
-#### `Tm`
-
-``` purescript
-data Tm
-  = TmNum Number
-  | TmStr String
-  | TmBool Boolean
-  | TmArr [Tm]
-  | TmObj [{ value :: Tm, key :: String }]
-  | TmCon { values :: [Tm], con :: String }
-```
-
-
-#### `showTm`
-
-``` purescript
-instance showTm :: Show Tm
-```
-
-
-#### `eqTm`
-
-``` purescript
-instance eqTm :: Eq Tm
-```
-
-
-#### `eqObjEntry`
-
-``` purescript
-eqObjEntry :: forall k v. (Eq k, Eq v) => { value :: v, key :: k } -> { value :: v, key :: k } -> Boolean
-```
-
+A GenericSignature is a universal representation of the structure of an arbitrary data structure (that does not contain function arrows).
 
 #### `Proxy`
 
 ``` purescript
 data Proxy a
-  = Proxy 
+  = Proxy
 ```
 
+A proxy is a simple placeholder data type to allow us to pass type-level data at runtime.
+
+#### `anyProxy`
+
+``` purescript
+anyProxy :: forall a. Proxy a
+```
 
 #### `Generic`
 
 ``` purescript
 class Generic a where
-  typeOf :: Proxy a -> Ty
-  term :: a -> Tm
-  unTerm :: Tm -> Maybe a
+  toSpine :: a -> GenericSpine
+  toSignature :: Proxy a -> GenericSignature
+  fromSpine :: GenericSpine -> Maybe a
 ```
 
+The Generic typeclass provides methods for sending data to/from spine representations, as well as querying about the signatures of spine representations.
+For standard data structures, you can simply write "instance Generic Foo" in the module they are declared, and the instance methods will be filled in for you.
 
-#### `genericNumber`
-
+##### Instances
 ``` purescript
 instance genericNumber :: Generic Number
-```
-
-
-#### `genericString`
-
-``` purescript
+instance genericInt :: Generic Int
 instance genericString :: Generic String
-```
-
-
-#### `genericBoolean`
-
-``` purescript
-instance genericBoolean :: Generic Boolean
-```
-
-
-#### `elementProxy`
-
-``` purescript
-elementProxy :: forall a. Proxy [a] -> Proxy a
-```
-
-
-#### `genericArray`
-
-``` purescript
-instance genericArray :: (Generic a) => Generic [a]
-```
-
-
-#### `fstProxy`
-
-``` purescript
-fstProxy :: forall a b. Proxy (Tuple a b) -> Proxy a
-```
-
-
-#### `sndProxy`
-
-``` purescript
-sndProxy :: forall a b. Proxy (Tuple a b) -> Proxy b
-```
-
-
-#### `genericTuple`
-
-``` purescript
+instance genericBool :: Generic Boolean
+instance genericArray :: (Generic a) => Generic (Array a)
 instance genericTuple :: (Generic a, Generic b) => Generic (Tuple a b)
-```
-
-
-#### `maybeProxy`
-
-``` purescript
-maybeProxy :: forall a. Proxy (Maybe a) -> Proxy a
-```
-
-
-#### `genericMaybe`
-
-``` purescript
 instance genericMaybe :: (Generic a) => Generic (Maybe a)
-```
-
-
-#### `leftProxy`
-
-``` purescript
-leftProxy :: forall a b. Proxy (Either a b) -> Proxy a
-```
-
-
-#### `rightProxy`
-
-``` purescript
-rightProxy :: forall a b. Proxy (Either a b) -> Proxy b
-```
-
-
-#### `genericEither`
-
-``` purescript
 instance genericEither :: (Generic a, Generic b) => Generic (Either a b)
 ```
 
-
-#### `sizeOf`
-
-``` purescript
-sizeOf :: Tm -> Number
-```
-
-#### `gsize`
+#### `gShow`
 
 ``` purescript
-gsize :: forall a. (Generic a) => a -> Number
+gShow :: forall a. (Generic a) => a -> String
 ```
 
+This function can be used as the default instance for Show for any instnace of Generic
 
-#### `gshow`
+#### `gEq`
 
 ``` purescript
-gshow :: forall a. (Generic a) => a -> String
+gEq :: forall a. (Generic a) => a -> a -> Boolean
 ```
 
-#### `geq`
+This function can be used as the default instance for Eq for any instance of Generic
+
+#### `gCompare`
 
 ``` purescript
-geq :: forall a. (Generic a) => a -> a -> Boolean
+gCompare :: forall a. (Generic a) => a -> a -> Ordering
 ```
 
-#### `cast`
-
-``` purescript
-cast :: forall a b. (Generic a, Generic b) => a -> Maybe b
-```
-
-#### `GenericT`
-
-``` purescript
-data GenericT
-  = GenericT (Tm -> Tm)
-```
-
-#### `runGenericT`
-
-``` purescript
-runGenericT :: GenericT -> Tm -> Tm
-```
-
-
-#### `mkT`
-
-``` purescript
-mkT :: forall a. (Generic a) => (a -> a) -> GenericT
-```
-
-
-#### `gmapTImpl`
-
-``` purescript
-gmapTImpl :: GenericT -> Tm -> Tm
-```
-
-
-#### `gmapT`
-
-``` purescript
-gmapT :: forall a. (Generic a) => GenericT -> a -> a
-```
-
-
-#### `everywhereImpl`
-
-``` purescript
-everywhereImpl :: GenericT -> Tm -> Tm
-```
-
-
-#### `everywhere`
-
-``` purescript
-everywhere :: forall a. (Generic a) => GenericT -> a -> a
-```
-
-
-#### `GenericQ`
-
-``` purescript
-data GenericQ r
-  = GenericQ (Tm -> r)
-```
-
-#### `runGenericQ`
-
-``` purescript
-runGenericQ :: forall r. GenericQ r -> Tm -> r
-```
-
-
-#### `mkQ`
-
-``` purescript
-mkQ :: forall a r. (Generic a) => r -> (a -> r) -> GenericQ r
-```
-
-
-#### `everythingImpl`
-
-``` purescript
-everythingImpl :: forall a r. (r -> r -> r) -> GenericQ r -> Tm -> r
-```
-
-
-#### `everything`
-
-``` purescript
-everything :: forall a r. (Generic a) => (r -> r -> r) -> GenericQ r -> a -> r
-```
+This function can be used as the default instance for the compare method of Ord for any instance of Generic
