@@ -10,7 +10,9 @@
     "purescript",
     "generic"
   ],
-  "moduleType": ["node"],
+  "moduleType": [
+    "node"
+  ],
   "license": "MIT",
   "ignore": [
     "**/.*",
@@ -19,11 +21,10 @@
     "output"
   ],
   "dependencies": {
-    "purescript-arrays": "^0.3.0",
-    "purescript-either": "^0.2.0",
-    "purescript-foldable-traversable": "^0.4.0",
-    "purescript-maybe": "^0.3.0",
-    "purescript-strings": "^0.4.2",
-    "purescript-tuples": "^0.3.0"
+    "purescript-strings": "~0.6.0",
+    "purescript-arrays": "~0.4.1",
+    "purescript-either": "~0.2.0",
+    "purescript-tuples": "~0.4.0",
+    "purescript-integers": "~0.2.1"
   }
 }
