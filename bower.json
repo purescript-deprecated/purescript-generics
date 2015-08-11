@@ -20,6 +20,10 @@
     "node_modules",
     "output"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/purescript/purescript-generics.git"
+  },
   "dependencies": {
     "purescript-strings": "~0.6.0",
     "purescript-arrays": "~0.4.1",
