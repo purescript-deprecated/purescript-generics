@@ -2,7 +2,7 @@ module Test.Main where
 
 import Prelude
 import Data.Maybe
-import Data.Generics
+import Data.Generic
 import Data.Array
 import Control.Monad.Eff.Console
 import Data.Either

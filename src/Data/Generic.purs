@@ -1,4 +1,4 @@
-module Data.Generics
+module Data.Generic
   (Generic, toSpine, toSignature, fromSpine,
    GenericSpine(..),
    GenericSignature(..),
@@ -151,6 +151,7 @@ instance eqGeneric :: Eq GenericSpine where
     eq (SNumber x) (SNumber y) = x == y
     eq (SString x) (SString y) = x == y
     eq (SArray xs) (SArray ys) = length xs == length ys && zipAll (\x y -> x unit == y unit) xs ys
+    eq _ _ = false
 
 -- | This function can be used as the default instance for Eq for any instance of Generic
 gEq :: forall a. (Generic a) => a -> a -> Boolean

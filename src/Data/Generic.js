@@ -1,7 +1,7 @@
 /* global exports */
 "use strict";
 
-// module Data.Generics
+// module Data.Generic
 
 
 //------------------------------------------------------------------------------
