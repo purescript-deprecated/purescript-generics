@@ -11,9 +11,9 @@ data Foo = Foo Number String | Bar Number | Quux (Array String) | Baz {a :: Mayb
 
 data IntList = IntList Number IntList | NilIntList
 
-instance genericFoo :: Generic Foo
+derive instance genericFoo :: Generic Foo
 
-instance genericIntList :: Generic IntList
+derive instance genericIntList :: Generic IntList
 
 instance showFoo :: Show Foo where
     show = gShow
@@ -29,7 +29,7 @@ instance showIntList :: Show IntList where
 
 newtype MyNewString = MyNewString String
 
-instance genericNew :: Generic MyNewString
+derive instance genericNew :: Generic MyNewString
 
 instance showNewInt :: Show MyNewString where
     show = gShow
