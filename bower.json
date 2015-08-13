@@ -4,7 +4,6 @@
   "authors": [
     "Gershom Bazerman <gershomb@gmail.com>"
   ],
-  "version": "0.3.0",
   "description": "Generic programming",
   "keywords": [
     "purescript",
@@ -25,13 +24,11 @@
     "url": "git://github.com/purescript/purescript-generics.git"
   },
   "dependencies": {
-    "purescript-strings": "~0.6.0",
-    "purescript-arrays": "~0.4.1",
-    "purescript-either": "~0.2.0",
-    "purescript-tuples": "~0.4.0",
-    "purescript-integers": "~0.2.1"
+    "purescript-arrays": "^0.4.2",
+    "purescript-either": "^0.2.1",
+    "purescript-strings": "^0.7.0"
   },
   "devDependencies": {
-    "purescript-console": "~0.1.0"
+    "purescript-console": "^0.1.0"
   }
 }

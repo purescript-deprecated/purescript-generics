@@ -8,16 +8,14 @@ module Data.Generic
    gEq,
    gCompare
   ) where
+
 import Prelude
-import Data.Either
-import Data.Maybe
-import qualified Data.String as S
-import Data.Tuple
-import Data.Traversable
-import Data.Array
-import Data.Int
-import Data.Monoid.Conj
-import Data.Foldable
+
+import Data.Either (Either(..))
+import Data.Maybe (Maybe(..))
+import Data.Tuple (Tuple(..))
+import Data.Traversable (traverse)
+import Data.Array (null, length)
 import Data.String (joinWith)
 
 -- | A GenericSpine is a universal represntation of an arbitrary data structure (that does not contain function arrows).
