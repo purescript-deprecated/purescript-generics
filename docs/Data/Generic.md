@@ -7,6 +7,7 @@ data GenericSpine
   = SProd String (Array (Unit -> GenericSpine))
   | SRecord (Array { recLabel :: String, recValue :: Unit -> GenericSpine })
   | SNumber Number
+  | SBoolean Boolean
   | SInt Int
   | SString String
   | SArray (Array (Unit -> GenericSpine))
@@ -27,6 +28,7 @@ data GenericSignature
   = SigProd (Array { sigConstructor :: String, sigValues :: Array (Unit -> GenericSignature) })
   | SigRecord (Array { recLabel :: String, recValue :: Unit -> GenericSignature })
   | SigNumber
+  | SigBoolean
   | SigInt
   | SigString
   | SigArray (Unit -> GenericSignature)
