@@ -6,16 +6,19 @@ module Data.Generic
    anyProxy,
    gShow,
    gEq,
-   gCompare
+   gCompare,
+   eitherGBottom,
+   eitherGTop
   ) where
 
 import Prelude
 
+import Control.Bind ((=<<))
 import Data.Either (Either(..))
-import Data.Maybe (Maybe(..))
+import Data.Maybe (Maybe(..), maybe)
 import Data.Tuple (Tuple(..))
 import Data.Traversable (traverse)
-import Data.Array (null, length)
+import Data.Array (null, length, head, last)
 import Data.String (joinWith)
 
 -- | A GenericSpine is a universal represntation of an arbitrary data structure (that does not contain function arrows).
@@ -116,7 +119,6 @@ instance genericEither :: (Generic a, Generic b) => Generic (Either a b) where
     fromSpine (SProd "Data.Either.Right" [x]) = Right <$> fromSpine (x unit)
     fromSpine _ = Nothing
 
-
 --- Generic Functions
 genericShowPrec :: Int -> GenericSpine -> String
 genericShowPrec d (SProd s arr) =
@@ -194,3 +196,38 @@ instance ordGeneric :: Ord GenericSpine where
 -- | This function can be used as the default instance for the compare method of Ord for any instance of Generic
 gCompare :: forall a. (Generic a) => a -> a -> Ordering
 gCompare x y = compare (toSpine x) (toSpine y)
+
+data BoundTo = Top | Bottom
+
+boundedAddend :: forall a. (Generic a) => BoundTo -> Either String a
+boundedAddend boundTo = boundSpine (toSignature (Proxy :: Proxy a))
+                    >>= fromSpine
+                    >>> maybe (Left "Can't construct a value from spine") Right
+  where
+    boundSpine SigNumber           = Left "No instance for Bounded Number"
+    boundSpine SigInt              = Right $ SInt boundVal
+    boundSpine SigString           = Left "No instance for Bounded String"
+    boundSpine (SigArray _)        = Left "No instance for Bounded Array"
+    boundSpine (SigRecord factors) =
+      SRecord <$> traverse (\factor ->
+        (factor{recValue = _ } <<< const) <$> (boundSpine $ factor.recValue unit))
+        factors
+    boundSpine (SigProd addends) = SProd <$> mConstr <*> mVals
+      where
+        mTerm    = maybe (Left "The type has no constructors") Right (boundElem addends)
+        mConstr  = _.sigConstructor <$> mTerm
+        mSigVals = _.sigValues <$> mTerm
+        mVals    = map (map const) <<< traverse (boundSpine <<< (unit #)) =<< mSigVals
+
+    boundVal = case boundTo of
+                 Top    -> top
+                 Bottom -> bottom
+    boundElem = case boundTo of
+                  Top    -> last
+                  Bottom -> head
+
+eitherGBottom :: forall a. (Generic a) => Either String a
+eitherGBottom = boundedAddend Bottom
+
+eitherGTop :: forall a. (Generic a) => Either String a
+eitherGTop = boundedAddend Top

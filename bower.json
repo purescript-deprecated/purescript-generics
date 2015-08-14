@@ -29,6 +29,7 @@
     "purescript-strings": "^0.7.0"
   },
   "devDependencies": {
-    "purescript-console": "^0.1.0"
+    "purescript-console": "^0.1.0",
+    "purescript-test-unit": "^2.0.0"
   }
 }
