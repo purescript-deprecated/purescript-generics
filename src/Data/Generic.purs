@@ -133,7 +133,7 @@ genericShowPrec d (SNumber x) = show x
 genericShowPrec d (SString x) = show x
 genericShowPrec d (SArray xs) = "[" <> joinWith ", "  (map (\x -> genericShowPrec 0 (x unit)) xs) <> "]"
 
--- | This function can be used as the default instance for Show for any instnace of Generic
+-- | This function can be used as the default instance for Show for any instance of Generic
 gShow :: forall a. (Generic a) => a -> String
 gShow = genericShowPrec 0 <<< toSpine
 

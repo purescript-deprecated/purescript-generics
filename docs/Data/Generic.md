@@ -79,7 +79,7 @@ instance genericEither :: (Generic a, Generic b) => Generic (Either a b)
 gShow :: forall a. (Generic a) => a -> String
 ```
 
-This function can be used as the default instance for Show for any instnace of Generic
+This function can be used as the default instance for Show for any instance of Generic
 
 #### `gEq`
 
