@@ -22,6 +22,7 @@ import Data.String (joinWith)
 data GenericSpine = SProd String (Array (Unit -> GenericSpine))
                   | SRecord (Array {recLabel :: String, recValue :: Unit -> GenericSpine})
                   | SNumber Number
+                  | SBoolean Boolean
                   | SInt Int
                   | SString String
                   | SArray (Array (Unit -> GenericSpine))
@@ -29,7 +30,11 @@ data GenericSpine = SProd String (Array (Unit -> GenericSpine))
 -- | A GenericSignature is a universal representation of the structure of an arbitrary data structure (that does not contain function arrows).
 data GenericSignature = SigProd (Array {sigConstructor :: String, sigValues :: Array (Unit -> GenericSignature)})
                       | SigRecord (Array {recLabel :: String, recValue :: Unit -> GenericSignature})
-                      | SigNumber | SigInt | SigString | SigArray (Unit -> GenericSignature)
+                      | SigNumber 
+                      | SigBoolean
+                      | SigInt 
+                      | SigString 
+                      | SigArray (Unit -> GenericSignature)
 
 -- | A proxy is a simple placeholder data type to allow us to pass type-level data at runtime.
 data Proxy a = Proxy
@@ -63,12 +68,9 @@ instance genericString :: Generic String where
     fromSpine _ = Nothing
 
 instance genericBool :: Generic Boolean where
-    toSpine true = SProd "true" []
-    toSpine false = SProd "false" []
-    toSignature _ = SigProd [{sigConstructor: "true",sigValues: []},
-                             {sigConstructor: "false",sigValues: []}]
-    fromSpine (SProd "true" [])  = Just true
-    fromSpine (SProd "false" []) = Just false
+    toSpine b = SBoolean b
+    toSignature _ = SigBoolean
+    fromSpine (SBoolean b)  = Just b
     fromSpine _ = Nothing
 
 instance genericArray :: (Generic a) => Generic (Array a) where
@@ -127,11 +129,11 @@ genericShowPrec d (SProd s arr) =
         showParen true  x = "(" <> x <> ")"
 
 genericShowPrec d (SRecord xs) = "{" <> joinWith ", " (map (\x -> x.recLabel <> ": " <> genericShowPrec 0 (x.recValue unit)) xs) <> "}"
-
-genericShowPrec d (SInt x)    = show x
-genericShowPrec d (SNumber x) = show x
-genericShowPrec d (SString x) = show x
-genericShowPrec d (SArray xs) = "[" <> joinWith ", "  (map (\x -> genericShowPrec 0 (x unit)) xs) <> "]"
+genericShowPrec d (SBoolean x) = show x
+genericShowPrec d (SInt x)     = show x
+genericShowPrec d (SNumber x)  = show x
+genericShowPrec d (SString x)  = show x
+genericShowPrec d (SArray xs)  = "[" <> joinWith ", "  (map (\x -> genericShowPrec 0 (x unit)) xs) <> "]"
 
 -- | This function can be used as the default instance for Show for any instance of Generic
 gShow :: forall a. (Generic a) => a -> String
@@ -145,10 +147,11 @@ instance eqGeneric :: Eq GenericSpine where
                                       && zipAll (\x y -> x unit == y unit) arr1 arr2
     eq (SRecord xs) (SRecord ys) = length xs == length ys && zipAll go xs ys
              where go x y = x.recLabel == y.recLabel && x.recValue unit == y.recValue unit
-    eq (SInt x) (SInt y) = x == y
-    eq (SNumber x) (SNumber y) = x == y
-    eq (SString x) (SString y) = x == y
-    eq (SArray xs) (SArray ys) = length xs == length ys && zipAll (\x y -> x unit == y unit) xs ys
+    eq (SInt x)     (SInt y)     = x == y
+    eq (SNumber x)  (SNumber y)  = x == y
+    eq (SBoolean x) (SBoolean y) = x == y
+    eq (SString x)  (SString y)  = x == y
+    eq (SArray xs)  (SArray ys)  = length xs == length ys && zipAll (\x y -> x unit == y unit) xs ys
     eq _ _ = false
 
 -- | This function can be used as the default instance for Eq for any instance of Generic
@@ -180,6 +183,9 @@ instance ordGeneric :: Ord GenericSpine where
     compare (SInt x) (SInt y) = compare x y
     compare (SInt _) _ = LT
     compare _ (SInt _) = GT
+    compare (SBoolean x) (SBoolean y) = compare x y
+    compare (SBoolean _) _ = LT
+    compare _ (SBoolean _) = GT
     compare (SNumber x) (SNumber y) = compare x y
     compare (SNumber _) _ = LT
     compare _ (SNumber _) = GT
