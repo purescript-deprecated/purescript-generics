@@ -2,6 +2,7 @@ module Data.Generic
   (Generic, toSpine, toSignature, fromSpine,
    GenericSpine(..),
    GenericSignature(..),
+   isValidSpine,
    Proxy(..),
    anyProxy,
    gShow,
@@ -15,7 +16,8 @@ import Data.Either (Either(..))
 import Data.Maybe (Maybe(..))
 import Data.Tuple (Tuple(..))
 import Data.Traversable (traverse)
-import Data.Array (null, length)
+import Data.Foldable (all, and, find)
+import Data.Array (null, length, sortBy, zipWith)
 import Data.String (joinWith)
 
 -- | A GenericSpine is a universal represntation of an arbitrary data structure (that does not contain function arrows).
@@ -48,6 +50,24 @@ class Generic a where
     toSpine :: a -> GenericSpine
     toSignature :: Proxy a -> GenericSignature
     fromSpine :: GenericSpine -> Maybe a
+
+-- | Checks that the spine follows the structure defined by the signature
+isValidSpine :: GenericSignature -> GenericSpine -> Boolean
+isValidSpine SigBoolean (SBoolean _) = true
+isValidSpine SigNumber (SNumber _) = true
+isValidSpine SigInt (SInt _) = true
+isValidSpine SigString (SString _) = true
+isValidSpine (SigArray sig) (SArray spines) = all (isValidSpine (sig unit) <<< (unit #)) spines
+isValidSpine (SigProd alts) (SProd tag values) =
+  case find ((tag ==) <<< _.sigConstructor) alts of
+    Nothing -> false
+    Just { sigValues: sigValues } ->
+      and $ zipWith (\sig spine -> isValidSpine (sig unit) (spine unit)) sigValues values
+isValidSpine (SigRecord fieldSigs) (SRecord fieldVals) =
+  and $ zipWith (\sig val -> isValidSpine (sig.recValue unit) (val.recValue unit))
+                (sortBy (\a b -> compare a.recLabel b.recLabel) fieldSigs)
+                (sortBy (\a b -> compare a.recLabel b.recLabel) fieldVals)
+isValidSpine _ _ = false
 
 instance genericNumber :: Generic Number where
     toSpine x = SNumber x
