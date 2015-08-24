@@ -75,6 +75,14 @@ instance genericMaybe :: (Generic a) => Generic (Maybe a)
 instance genericEither :: (Generic a, Generic b) => Generic (Either a b)
 ```
 
+#### `isValidSpine`
+
+``` purescript
+isValidSpine :: GenericSignature -> GenericSpine -> Boolean
+```
+
+Checks that the spine follows the structure defined by the signature
+
 #### `gShow`
 
 ``` purescript
