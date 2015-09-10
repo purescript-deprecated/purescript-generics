@@ -8,6 +8,7 @@ import Control.Monad.Eff.Console
 import Data.Either
 
 data Foo = Foo Number String | Bar Number | Quux (Array String) | Baz {a :: Maybe String, bq :: Number} String
+         | Corge (Array Char)
 
 data IntList = IntList Number IntList | NilIntList
 
@@ -38,6 +39,18 @@ toFrom :: forall a. (Generic a) => a -> Maybe a
 toFrom x = fromSpine (toSpine x)
 
 main = do
-  print $ show $ toFrom [Foo 12.0 "Hello", Quux ["Hi","Dere"], Baz {a : Just "yo", bq : 22.0} "oy"]
+  print $ show $ toFrom [
+    Foo 12.0 "Hello"
+  , Quux ["Hi","Dere"]
+  , Baz {a : Just "yo", bq : 22.0} "oy"
+  , Corge ['H', 'i', ' ', 'D', 'e', 'r', 'e'] ]
   print $ show $ gCompare (Bar 12.3) (Foo 34.1 "hello")
-  print $ show $ gEq [Foo 12.0 "Hello", Quux ["Hi","Dere"], Baz {a : Just "yo", bq : 22.0} "oy"] [Foo 12.0 "Hello", Quux ["Hi","Dere"], Baz {a : Just "yo", bq : 22.0} "yo"]
+  print $ show $ gEq
+    [ Foo 12.0 "Hello"
+    , Quux ["Hi","Dere"]
+    , Baz {a : Just "yo", bq : 22.0} "oy"
+    , Corge ['H', 'i', ' ', 'D', 'e', 'r', 'e'] ]
+    [ Foo 12.0 "Hello"
+    , Quux ["Hi","Dere"]
+    , Baz {a : Just "yo", bq : 22.0} "yo"
+    , Corge ['H', 'i', ' ', 'D', 'e', 'r', 'e'] ]
