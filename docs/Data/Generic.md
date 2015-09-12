@@ -10,6 +10,7 @@ data GenericSpine
   | SBoolean Boolean
   | SInt Int
   | SString String
+  | SChar Char
   | SArray (Array (Unit -> GenericSpine))
 ```
 
@@ -31,6 +32,7 @@ data GenericSignature
   | SigBoolean
   | SigInt
   | SigString
+  | SigChar
   | SigArray (Unit -> GenericSignature)
 ```
 
@@ -68,6 +70,7 @@ For standard data structures, you can simply write "instance Generic Foo" in the
 instance genericNumber :: Generic Number
 instance genericInt :: Generic Int
 instance genericString :: Generic String
+instance genericChar :: Generic Char
 instance genericBool :: Generic Boolean
 instance genericArray :: (Generic a) => Generic (Array a)
 instance genericTuple :: (Generic a, Generic b) => Generic (Tuple a b)

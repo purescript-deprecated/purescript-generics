@@ -27,6 +27,7 @@ data GenericSpine = SProd String (Array (Unit -> GenericSpine))
                   | SBoolean Boolean
                   | SInt Int
                   | SString String
+                  | SChar Char
                   | SArray (Array (Unit -> GenericSpine))
 
 -- | A GenericSignature is a universal representation of the structure of an arbitrary data structure (that does not contain function arrows).
@@ -36,6 +37,7 @@ data GenericSignature = SigProd (Array {sigConstructor :: String, sigValues :: A
                       | SigBoolean
                       | SigInt 
                       | SigString 
+                      | SigChar
                       | SigArray (Unit -> GenericSignature)
 
 -- | A proxy is a simple placeholder data type to allow us to pass type-level data at runtime.
@@ -57,6 +59,7 @@ isValidSpine SigBoolean (SBoolean _) = true
 isValidSpine SigNumber (SNumber _) = true
 isValidSpine SigInt (SInt _) = true
 isValidSpine SigString (SString _) = true
+isValidSpine SigChar (SChar _) = true
 isValidSpine (SigArray sig) (SArray spines) = all (isValidSpine (sig unit) <<< (unit #)) spines
 isValidSpine (SigProd alts) (SProd tag values) =
   case find ((tag ==) <<< _.sigConstructor) alts of
@@ -85,6 +88,12 @@ instance genericString :: Generic String where
     toSpine x = SString x
     toSignature _ = SigString
     fromSpine (SString s) = Just s
+    fromSpine _ = Nothing
+
+instance genericChar :: Generic Char where
+    toSpine x = SChar x
+    toSignature _ = SigChar
+    fromSpine (SChar s) = Just s
     fromSpine _ = Nothing
 
 instance genericBool :: Generic Boolean where
@@ -153,6 +162,7 @@ genericShowPrec d (SBoolean x) = show x
 genericShowPrec d (SInt x)     = show x
 genericShowPrec d (SNumber x)  = show x
 genericShowPrec d (SString x)  = show x
+genericShowPrec d (SChar x)    = show x
 genericShowPrec d (SArray xs)  = "[" <> joinWith ", "  (map (\x -> genericShowPrec 0 (x unit)) xs) <> "]"
 
 -- | This function can be used as the default instance for Show for any instance of Generic
@@ -170,7 +180,7 @@ instance eqGeneric :: Eq GenericSpine where
     eq (SInt x)     (SInt y)     = x == y
     eq (SNumber x)  (SNumber y)  = x == y
     eq (SBoolean x) (SBoolean y) = x == y
-    eq (SString x)  (SString y)  = x == y
+    eq (SChar x)    (SChar y)    = x == y
     eq (SArray xs)  (SArray ys)  = length xs == length ys && zipAll (\x y -> x unit == y unit) xs ys
     eq _ _ = false
 
@@ -212,6 +222,9 @@ instance ordGeneric :: Ord GenericSpine where
     compare (SString x) (SString y) = compare x y
     compare (SString _) _ = LT
     compare _ (SString _) = GT
+    compare (SChar x) (SChar y) = compare x y
+    compare (SChar _) _ = LT
+    compare _ (SChar _) = GT
     compare (SArray xs) (SArray ys) = compare 0 $ zipCompare (\x y -> case compare (x unit) (y unit) of
                                                                         EQ -> 0
                                                                         LT -> 1
