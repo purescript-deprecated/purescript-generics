@@ -181,6 +181,7 @@ instance eqGeneric :: Eq GenericSpine where
     eq (SNumber x)  (SNumber y)  = x == y
     eq (SBoolean x) (SBoolean y) = x == y
     eq (SChar x)    (SChar y)    = x == y
+    eq (SString x)  (SString y)  = x == y
     eq (SArray xs)  (SArray ys)  = length xs == length ys && zipAll (\x y -> x unit == y unit) xs ys
     eq _ _ = false
 
