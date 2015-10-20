@@ -189,7 +189,7 @@ instance eqGeneric :: Eq GenericSpine where
 gEq :: forall a. (Generic a) => a -> a -> Boolean
 gEq x y = toSpine x == toSpine y
 
-foreign import zipCompare :: forall a b c. (a -> b -> Int) -> Array a -> Array b -> Int
+foreign import zipCompare :: forall a b. (a -> b -> Int) -> Array a -> Array b -> Int
 
 instance ordGeneric :: Ord GenericSpine where
     compare (SProd s1 arr1) (SProd s2 arr2) =
