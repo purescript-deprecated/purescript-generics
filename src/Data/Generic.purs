@@ -169,7 +169,7 @@ genericShowPrec d (SArray xs)  = "[" <> joinWith ", "  (map (\x -> genericShowPr
 gShow :: forall a. (Generic a) => a -> String
 gShow = genericShowPrec 0 <<< toSpine
 
-foreign import zipAll :: forall a b c. (a -> b -> Boolean) -> Array a -> Array b -> Boolean
+foreign import zipAll :: forall a b. (a -> b -> Boolean) -> Array a -> Array b -> Boolean
 
 instance eqGeneric :: Eq GenericSpine where
     eq (SProd s1 arr1) (SProd s2 arr2) = s1 == s2
