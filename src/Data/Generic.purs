@@ -3,7 +3,7 @@ module Data.Generic
    GenericSpine(..),
    GenericSignature(..),
    isValidSpine,
-   Proxy(..),
+   module Type.Proxy,
    anyProxy,
    gShow,
    gEq,
@@ -19,6 +19,7 @@ import Data.Traversable (traverse)
 import Data.Foldable (all, and, find)
 import Data.Array (null, length, sortBy, zipWith)
 import Data.String (joinWith)
+import Type.Proxy (Proxy(..))
 
 -- | A GenericSpine is a universal represntation of an arbitrary data structure (that does not contain function arrows).
 data GenericSpine = SProd String (Array (Unit -> GenericSpine))
@@ -39,9 +40,6 @@ data GenericSignature = SigProd (Array {sigConstructor :: String, sigValues :: A
                       | SigString 
                       | SigChar
                       | SigArray (Unit -> GenericSignature)
-
--- | A proxy is a simple placeholder data type to allow us to pass type-level data at runtime.
-data Proxy a = Proxy
 
 anyProxy :: forall a. Proxy a
 anyProxy = Proxy
