@@ -18,15 +18,23 @@ A GenericSpine is a universal represntation of an arbitrary data structure (that
 
 ##### Instances
 ``` purescript
-instance eqGeneric :: Eq GenericSpine
-instance ordGeneric :: Ord GenericSpine
+Eq GenericSpine
+Ord GenericSpine
 ```
+
+#### `DataConstructor`
+
+``` purescript
+type DataConstructor = { sigConstructor :: String, sigValues :: Array (Unit -> GenericSignature) }
+```
+
+Identifies a data constructor.
 
 #### `GenericSignature`
 
 ``` purescript
 data GenericSignature
-  = SigProd (Array { sigConstructor :: String, sigValues :: Array (Unit -> GenericSignature) })
+  = SigProd String (Array DataConstructor)
   | SigRecord (Array { recLabel :: String, recValue :: Unit -> GenericSignature })
   | SigNumber
   | SigBoolean
@@ -67,15 +75,15 @@ For standard data structures, you can simply write "instance Generic Foo" in the
 
 ##### Instances
 ``` purescript
-instance genericNumber :: Generic Number
-instance genericInt :: Generic Int
-instance genericString :: Generic String
-instance genericChar :: Generic Char
-instance genericBool :: Generic Boolean
-instance genericArray :: (Generic a) => Generic (Array a)
-instance genericTuple :: (Generic a, Generic b) => Generic (Tuple a b)
-instance genericMaybe :: (Generic a) => Generic (Maybe a)
-instance genericEither :: (Generic a, Generic b) => Generic (Either a b)
+Generic Number
+Generic Int
+Generic String
+Generic Char
+Generic Boolean
+(Generic a) => Generic (Array a)
+(Generic a, Generic b) => Generic (Tuple a b)
+(Generic a) => Generic (Maybe a)
+(Generic a, Generic b) => Generic (Either a b)
 ```
 
 #### `isValidSpine`

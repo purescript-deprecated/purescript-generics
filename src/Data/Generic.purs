@@ -1,13 +1,17 @@
 module Data.Generic
-  (Generic, toSpine, toSignature, fromSpine,
-   GenericSpine(..),
-   GenericSignature(..),
-   isValidSpine,
-   Proxy(..),
-   anyProxy,
-   gShow,
-   gEq,
-   gCompare
+  ( Generic
+  , toSpine
+  , toSignature
+  , fromSpine
+  , GenericSpine(..)
+  , GenericSignature(..)
+  , DataConstructor()
+  , isValidSpine
+  , Proxy(..)
+  , anyProxy
+  , gShow
+  , gEq
+  , gCompare
   ) where
 
 import Prelude
@@ -22,7 +26,7 @@ import Data.String (joinWith)
 
 -- | A GenericSpine is a universal represntation of an arbitrary data structure (that does not contain function arrows).
 data GenericSpine = SProd String (Array (Unit -> GenericSpine))
-                  | SRecord (Array {recLabel :: String, recValue :: Unit -> GenericSpine})
+                  | SRecord (Array { recLabel :: String, recValue :: Unit -> GenericSpine })
                   | SNumber Number
                   | SBoolean Boolean
                   | SInt Int
@@ -30,13 +34,19 @@ data GenericSpine = SProd String (Array (Unit -> GenericSpine))
                   | SChar Char
                   | SArray (Array (Unit -> GenericSpine))
 
+-- | Identifies a data constructor.
+type DataConstructor =
+  { sigConstructor :: String
+  , sigValues :: Array (Unit -> GenericSignature)
+  }
+
 -- | A GenericSignature is a universal representation of the structure of an arbitrary data structure (that does not contain function arrows).
-data GenericSignature = SigProd (Array {sigConstructor :: String, sigValues :: Array (Unit -> GenericSignature)})
-                      | SigRecord (Array {recLabel :: String, recValue :: Unit -> GenericSignature})
-                      | SigNumber 
+data GenericSignature = SigProd String (Array DataConstructor)
+                      | SigRecord (Array { recLabel :: String, recValue :: Unit -> GenericSignature })
+                      | SigNumber
                       | SigBoolean
-                      | SigInt 
-                      | SigString 
+                      | SigInt
+                      | SigString
                       | SigChar
                       | SigArray (Unit -> GenericSignature)
 
@@ -61,7 +71,7 @@ isValidSpine SigInt (SInt _) = true
 isValidSpine SigString (SString _) = true
 isValidSpine SigChar (SChar _) = true
 isValidSpine (SigArray sig) (SArray spines) = all (isValidSpine (sig unit) <<< (unit #)) spines
-isValidSpine (SigProd alts) (SProd tag values) =
+isValidSpine (SigProd _ alts) (SProd tag values) =
   case find ((tag ==) <<< _.sigConstructor) alts of
     Nothing -> false
     Just { sigValues: sigValues } ->
@@ -114,7 +124,11 @@ instance genericArray :: (Generic a) => Generic (Array a) where
 instance genericTuple :: (Generic a, Generic b) => Generic (Tuple a b) where
       toSpine (Tuple x y) = SProd "Data.Tuple.Tuple" [\u -> toSpine x, \u -> toSpine y]
 
-      toSignature x = SigProd [{sigConstructor: "Data.Tuple.Tuple", sigValues: [\u -> toSignature (fstProxy x), \u -> toSignature (sndProxy x)]}]
+      toSignature x = SigProd "Data.Tuple.Tuple"
+                              [ { sigConstructor: "Data.Tuple.Tuple"
+                                , sigValues: [\u -> toSignature (fstProxy x), \u -> toSignature (sndProxy x)]
+                                }
+                              ]
                     where fstProxy :: Proxy (Tuple a b) -> Proxy a
                           fstProxy Proxy = (anyProxy :: Proxy a)
                           sndProxy :: Proxy (Tuple a b) -> Proxy b
@@ -126,8 +140,14 @@ instance genericTuple :: (Generic a, Generic b) => Generic (Tuple a b) where
 instance genericMaybe :: (Generic a) => Generic (Maybe a) where
       toSpine (Just x) = SProd "Data.Maybe.Just" [\u -> toSpine x]
       toSpine Nothing = SProd "Data.Maybe.Nothing" []
-      toSignature x = SigProd [{sigConstructor: "Data.Maybe.Just",sigValues: [\u -> toSignature (mbProxy x)]},
-                               {sigConstructor: "Data.Maybe.Nothing",sigValues:[]}]
+      toSignature x = SigProd "Data.Maybe.Maybe"
+                              [ { sigConstructor: "Data.Maybe.Just"
+                                , sigValues: [\u -> toSignature (mbProxy x)]
+                                }
+                              , { sigConstructor: "Data.Maybe.Nothing"
+                                , sigValues: []
+                                }
+                              ]
           where mbProxy :: Proxy (Maybe a) -> Proxy a
                 mbProxy Proxy = (anyProxy :: Proxy a)
       fromSpine (SProd "Data.Maybe.Just" [x]) = Just <$> fromSpine (x unit)
@@ -137,8 +157,14 @@ instance genericMaybe :: (Generic a) => Generic (Maybe a) where
 instance genericEither :: (Generic a, Generic b) => Generic (Either a b) where
     toSpine (Left x) = SProd "Data.Either.Left" [\u -> toSpine x]
     toSpine (Right x) = SProd "Data.Either.Right" [\u -> toSpine x]
-    toSignature x = SigProd [{sigConstructor: "Data.Either.Left",  sigValues: [\u -> toSignature (lproxy x)]},
-                             {sigConstructor: "Data.Either.Right", sigValues: [\u -> toSignature (rproxy x)]}]
+    toSignature x = SigProd "Data.Either.Either"
+                            [ { sigConstructor: "Data.Either.Left"
+                              , sigValues: [\u -> toSignature (lproxy x)]
+                              }
+                            , { sigConstructor: "Data.Either.Right"
+                              , sigValues: [\u -> toSignature (rproxy x)]
+                              }
+                            ]
           where lproxy :: Proxy (Either a b) -> Proxy a
                 lproxy Proxy = (anyProxy :: Proxy a)
                 rproxy :: Proxy (Either a b) -> Proxy b
