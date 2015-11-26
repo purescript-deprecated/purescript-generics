@@ -14,7 +14,7 @@ data GenericSpine
   | SArray (Array (Unit -> GenericSpine))
 ```
 
-A GenericSpine is a universal represntation of an arbitrary data structure (that does not contain function arrows).
+A GenericSpine is a universal representation of an arbitrary data structure (that does not contain function arrows).
 
 ##### Instances
 ``` purescript
