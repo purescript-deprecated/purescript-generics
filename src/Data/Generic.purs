@@ -23,7 +23,7 @@ import Data.Array (null, length, sortBy, zipWith)
 import Data.String (joinWith)
 import Type.Proxy (Proxy(..))
 
--- | A GenericSpine is a universal represntation of an arbitrary data structure (that does not contain function arrows).
+-- | A GenericSpine is a universal representation of an arbitrary data structure (that does not contain function arrows).
 data GenericSpine = SProd String (Array (Unit -> GenericSpine))
                   | SRecord (Array { recLabel :: String, recValue :: Unit -> GenericSpine })
                   | SNumber Number
