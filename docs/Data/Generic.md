@@ -56,7 +56,7 @@ class Generic a where
 ```
 
 The Generic typeclass provides methods for sending data to/from spine representations, as well as querying about the signatures of spine representations.
-For standard data structures, you can simply write "instance Generic Foo" in the module they are declared, and the instance methods will be filled in for you.
+For standard data structures, you can simply write `derive instance genericFoo :: Generic Foo` in the module they are declared, and the instance methods will be filled in for you.
 
 ##### Instances
 ``` purescript
