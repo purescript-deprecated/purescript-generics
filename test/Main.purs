@@ -6,6 +6,7 @@ import Data.Generic
 import Data.Array
 import Control.Monad.Eff.Console
 import Data.Either
+import Type.Proxy
 
 data Foo = Foo Number String | Bar Number | Quux (Array String) | Baz {a :: Maybe String, bq :: Number} String
          | Corge (Array Char)
@@ -54,3 +55,11 @@ main = do
     , Quux ["Hi","Dere"]
     , Baz {a : Just "yo", bq : 22.0} "yo"
     , Corge ['H', 'i', ' ', 'D', 'e', 'r', 'e'] ]
+
+  log "Testing Show GenericSignature instance:"
+  print (toSignature (Proxy :: Proxy Number))
+  print (toSignature (Proxy :: Proxy Char))
+  print (toSignature (Proxy :: Proxy (Array (Array Number))))
+  print (toSignature (Proxy :: Proxy Foo))
+  print (toSignature (Proxy :: Proxy (Array Foo)))
+  print (toSignature (Proxy :: Proxy MyNewString))

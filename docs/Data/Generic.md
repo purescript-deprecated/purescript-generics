@@ -46,6 +46,23 @@ data GenericSignature
 
 A GenericSignature is a universal representation of the structure of an arbitrary data structure (that does not contain function arrows).
 
+##### Instances
+``` purescript
+Show GenericSignature
+```
+
+#### `showSignature`
+
+``` purescript
+showSignature :: GenericSignature -> String
+```
+
+#### `showDataConstructor`
+
+``` purescript
+showDataConstructor :: DataConstructor -> String
+```
+
 #### `Generic`
 
 ``` purescript

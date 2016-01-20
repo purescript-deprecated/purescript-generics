@@ -5,7 +5,9 @@ module Data.Generic
   , fromSpine
   , GenericSpine(..)
   , GenericSignature(..)
+  , showSignature
   , DataConstructor()
+  , showDataConstructor
   , isValidSpine
   , gShow
   , gEq
@@ -18,7 +20,7 @@ import Data.Either (Either(..))
 import Data.Maybe (Maybe(..))
 import Data.Tuple (Tuple(..))
 import Data.Traversable (traverse)
-import Data.Foldable (all, and, find)
+import Data.Foldable (all, and, find, fold, intercalate)
 import Data.Array (null, length, sortBy, zipWith)
 import Data.String (joinWith)
 import Type.Proxy (Proxy(..))
@@ -48,6 +50,65 @@ data GenericSignature = SigProd String (Array DataConstructor)
                       | SigString
                       | SigChar
                       | SigArray (Unit -> GenericSignature)
+
+showSignature :: GenericSignature -> String
+showSignature sig =
+  fold $ case sig of
+    SigProd tyName ctors ->
+      ["SigProd ", show tyName, " ", showArray showDataConstructor ctors]
+    SigRecord labels ->
+      ["SigRecord ", showArray showLabel labels]
+    SigNumber ->
+      ["SigNumber"]
+    SigBoolean ->
+      ["SigBoolean"]
+    SigInt ->
+      ["SigInt"]
+    SigString ->
+      ["SigString"]
+    SigChar ->
+      ["SigChar"]
+    SigArray sig' ->
+      ["SigArray ", paren (force sig')]
+
+  where
+  paren s
+    | needsParen s = "(" <> showSignature s <> ")"
+    | otherwise = showSignature s
+
+  needsParen s = case s of
+    SigProd _ _ -> true
+    SigRecord _ -> true
+    SigNumber   -> false
+    SigBoolean  -> false
+    SigInt      -> false
+    SigString   -> false
+    SigChar     -> false
+    SigArray _  -> true
+
+instance showGenericSignature :: Show GenericSignature where
+  show = showSignature
+
+-- We use this instead of the default Show Array instance to avoid escaping
+-- strings twice.
+showArray :: forall a. (a -> String) -> Array a -> String
+showArray f xs = "[ " <> intercalate ", " (map f xs) <> " ]"
+
+showLabel ::
+  { recLabel :: String, recValue :: Unit -> GenericSignature } -> String
+showLabel l =
+  "{ recLabel: " <> show l.recLabel <>
+  ", recValue: " <> showSignature (force l.recValue) <>
+  " }"
+
+showDataConstructor :: DataConstructor -> String
+showDataConstructor dc =
+  "{ sigConstructor: " <> show dc.sigConstructor <>
+  ", sigValues: " <> showArray (showSignature <<< force) dc.sigValues <>
+  "}"
+
+force :: forall a. (Unit -> a) -> a
+force = ($ unit)
 
 anyProxy :: forall a. Proxy a
 anyProxy = Proxy
