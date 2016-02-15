@@ -1,5 +1,5 @@
 module Data.Generic
-  ( Generic
+  ( class Generic
   , toSpine
   , toSignature
   , fromSpine
@@ -14,7 +14,7 @@ module Data.Generic
   , gCompare
   ) where
 
-import Prelude
+import Prelude (class Ord, class Eq, class Show, Unit, Ordering(GT, LT, EQ), compare, negate, unit, ($), (==), (&&), (<<<), map, (<>), show, (>), (<$>), return, (<*>), (#), otherwise)
 
 import Data.Either (Either(..))
 import Data.Maybe (Maybe(..))
