@@ -139,6 +139,13 @@ isValidSpine (SigRecord fieldSigs) (SRecord fieldVals) =
                 (sortBy (\a b -> compare a.recLabel b.recLabel) fieldVals)
 isValidSpine _ _ = false
 
+
+instance genericUnit :: Generic Unit where
+  toSpine _ = SRecord []
+  toSignature _ = SigRecord []
+  fromSpine (SRecord []) = Just unit
+  fromSpine _ = Nothing
+
 instance genericNumber :: Generic Number where
     toSpine x = SNumber x
     toSignature _ = SigNumber
