@@ -39,6 +39,9 @@ instance showNewInt :: Show MyNewString where
 toFrom :: forall a. (Generic a) => a -> Maybe a
 toFrom x = fromSpine (toSpine x)
 
+data Bar = Bar1 Int
+derive instance genericBar :: Generic Bar
+
 main = do
   print $ show $ toFrom [
     Foo 12.0 "Hello"
@@ -63,3 +66,8 @@ main = do
   print (toSignature (Proxy :: Proxy Foo))
   print (toSignature (Proxy :: Proxy (Array Foo)))
   print (toSignature (Proxy :: Proxy MyNewString))
+  log "Basic test of Eq GenericSignature instance:"
+  log $ "Foo == Foo:" <> show (toSignature (Proxy :: Proxy Foo) == toSignature (Proxy :: Proxy Foo))
+  log $ "Foo == Bar:" <> show (toSignature (Proxy :: Proxy Foo) == toSignature (Proxy :: Proxy Bar))
+  log $ "Foo == Int:" <> show (toSignature (Proxy :: Proxy Foo) == toSignature (Proxy :: Proxy Int))
+  log $ "Foo == Array Int:" <> show (toSignature (Proxy :: Proxy Foo) == toSignature (Proxy :: Proxy (Array Int)))
