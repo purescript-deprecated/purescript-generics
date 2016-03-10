@@ -57,6 +57,7 @@ main = do
     , Corge ['H', 'i', ' ', 'D', 'e', 'r', 'e'] ]
 
   log "Testing Show GenericSignature instance:"
+  print (toSignature (Proxy :: Proxy Unit))
   print (toSignature (Proxy :: Proxy Number))
   print (toSignature (Proxy :: Proxy Char))
   print (toSignature (Proxy :: Proxy (Array (Array Number))))

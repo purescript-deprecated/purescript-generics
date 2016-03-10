@@ -141,9 +141,11 @@ isValidSpine _ _ = false
 
 
 instance genericUnit :: Generic Unit where
-  toSpine _ = SRecord []
-  toSignature _ = SigRecord []
-  fromSpine (SRecord []) = Just unit
+  toSpine _ = SProd "Prelude.Unit" []
+  toSignature _ = SigProd "Prelude.Unit" [{ sigConstructor : "Prelude.Unit"
+                                          , sigValues : []
+                                         }]
+  fromSpine (SProd "Prelude.Unit" []) = Just unit
   fromSpine _ = Nothing
 
 instance genericNumber :: Generic Number where
