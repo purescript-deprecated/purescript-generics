@@ -260,11 +260,11 @@ instance eqGeneric :: Eq GenericSpine where
                                       && zipAll (\x y -> x unit == y unit) arr1 arr2
     eq (SRecord xs) (SRecord ys) = length xs == length ys && zipAll go xs ys
              where go x y = x.recLabel == y.recLabel && x.recValue unit == y.recValue unit
-    eq (SInt x)     (SInt y)     = x == y
     eq (SNumber x)  (SNumber y)  = x == y
     eq (SBoolean x) (SBoolean y) = x == y
-    eq (SChar x)    (SChar y)    = x == y
+    eq (SInt x)     (SInt y)     = x == y
     eq (SString x)  (SString y)  = x == y
+    eq (SChar x)    (SChar y)    = x == y
     eq (SArray xs)  (SArray ys)  = length xs == length ys && zipAll (\x y -> x unit == y unit) xs ys
     eq _ _ = false
 
@@ -276,7 +276,8 @@ instance eqGenericSignature :: Eq GenericSignature where
   eq (SigProd s1 arr1) (SigProd s2 arr2) = s1 == s2
                                         && length arr1 == length arr2
                                         && zipAll eqDataConstructor arr1 arr2
-  eq (SigRecord arr1) (SigRecord arr2)   = zipAll (\x y -> x.recLabel == y.recLabel) arr1 arr2
+  eq (SigRecord arr1) (SigRecord arr2)   = length arr1 == length arr2
+                                        && zipAll (\x y -> x.recLabel == y.recLabel) arr1 arr2
                                         && zipAll (\x y -> x.recValue unit == y.recValue unit) arr1 arr2
   eq SigNumber   SigNumber               = true
   eq SigBoolean  SigBoolean              = true
