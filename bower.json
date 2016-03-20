@@ -24,12 +24,12 @@
     "url": "git://github.com/purescript/purescript-generics.git"
   },
   "dependencies": {
-    "purescript-arrays": "^0.4.2",
-    "purescript-either": "^0.2.1",
+    "purescript-arrays": "^1.0.0-rc.1",
+    "purescript-either": "^1.0.0-rc.1",
     "purescript-proxy": "^0.1.0",
     "purescript-strings": "^0.7.0"
   },
   "devDependencies": {
-    "purescript-console": "^0.1.0"
+    "purescript-console": "^1.0.0-rc.1"
   }
 }

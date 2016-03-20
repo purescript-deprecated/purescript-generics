@@ -14,7 +14,7 @@ module Data.Generic
   , gCompare
   ) where
 
-import Prelude (class Ord, class Eq, class Show, Unit, Ordering(GT, LT, EQ), compare, negate, unit, ($), (==), (&&), (<<<), map, (<>), show, (>), (<$>), return, (<*>), (#), otherwise)
+import Prelude (class Ord, class Eq, class Show, Unit, Ordering(GT, LT, EQ), compare, negate, unit, ($), (==), (&&), (<<<), map, (<>), show, (>), (<$>), pure, (<*>), (#), otherwise)
 
 import Data.Either (Either(..))
 import Data.Maybe (Maybe(..))
@@ -108,7 +108,7 @@ showDataConstructor dc =
   "}"
 
 force :: forall a. (Unit -> a) -> a
-force = ($ unit)
+force = (_ $ unit)
 
 anyProxy :: forall a. Proxy a
 anyProxy = Proxy
@@ -208,7 +208,7 @@ instance genericMaybe :: (Generic a) => Generic (Maybe a) where
           where mbProxy :: Proxy (Maybe a) -> Proxy a
                 mbProxy Proxy = (anyProxy :: Proxy a)
       fromSpine (SProd "Data.Maybe.Just" [x]) = Just <$> fromSpine (x unit)
-      fromSpine (SProd "Data.Maybe.Nothing" []) = return Nothing
+      fromSpine (SProd "Data.Maybe.Nothing" []) = pure Nothing
       fromSpine _ = Nothing
 
 instance genericEither :: (Generic a, Generic b) => Generic (Either a b) where
