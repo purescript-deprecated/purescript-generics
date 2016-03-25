@@ -6,7 +6,9 @@ import Data.Generic
 import Data.Array
 import Control.Monad.Eff.Console
 import Data.Either
+import Test.Assert (assert', ASSERT)
 import Type.Proxy
+
 
 data Foo = Foo Number String | Bar Number | Quux (Array String) | Baz {a :: Maybe String, bq :: Number} String
          | Corge (Array Char)
@@ -39,6 +41,9 @@ instance showNewInt :: Show MyNewString where
 toFrom :: forall a. (Generic a) => a -> Maybe a
 toFrom x = fromSpine (toSpine x)
 
+data Bar = Bar1 Int
+derive instance genericBar :: Generic Bar
+
 main = do
   print $ show $ toFrom [
     Foo 12.0 "Hello"
@@ -63,3 +68,8 @@ main = do
   print (toSignature (Proxy :: Proxy Foo))
   print (toSignature (Proxy :: Proxy (Array Foo)))
   print (toSignature (Proxy :: Proxy MyNewString))
+  log "Basic test of Eq GenericSignature instance .."
+  assert' "Foo == Foo:" $ toSignature (Proxy :: Proxy Foo) == toSignature (Proxy :: Proxy Foo)
+  assert' "Foo == Bar:" $ toSignature (Proxy :: Proxy Foo) /= toSignature (Proxy :: Proxy Bar)
+  assert' "Foo == Int:" $ toSignature (Proxy :: Proxy Foo) /= toSignature (Proxy :: Proxy Int)
+  assert' "Foo == Array Int:" $ toSignature (Proxy :: Proxy Foo) /= toSignature (Proxy :: Proxy (Array Int))

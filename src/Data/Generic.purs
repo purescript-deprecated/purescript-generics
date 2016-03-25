@@ -258,15 +258,42 @@ instance eqGeneric :: Eq GenericSpine where
     eq (SProd s1 arr1) (SProd s2 arr2) = s1 == s2
                                       && length arr1 == length arr2
                                       && zipAll (\x y -> x unit == y unit) arr1 arr2
-    eq (SRecord xs) (SRecord ys) = length xs == length ys && zipAll go xs ys
-             where go x y = x.recLabel == y.recLabel && x.recValue unit == y.recValue unit
-    eq (SInt x)     (SInt y)     = x == y
+    eq (SRecord arr1) (SRecord arr2) = eqRecordSigs arr1 arr2
     eq (SNumber x)  (SNumber y)  = x == y
     eq (SBoolean x) (SBoolean y) = x == y
-    eq (SChar x)    (SChar y)    = x == y
+    eq (SInt x)     (SInt y)     = x == y
     eq (SString x)  (SString y)  = x == y
+    eq (SChar x)    (SChar y)    = x == y
     eq (SArray xs)  (SArray ys)  = length xs == length ys && zipAll (\x y -> x unit == y unit) xs ys
     eq _ _ = false
+
+instance eqGenericSignature :: Eq GenericSignature where
+  eq (SigProd s1 arr1) (SigProd s2 arr2) = s1 == s2
+                                        && length arr1 == length arr2
+                                        && zipAll eqDataConstructor arr1 arr2
+  eq (SigRecord arr1) (SigRecord arr2)   = eqRecordSigs arr1 arr2
+  eq SigNumber   SigNumber               = true
+  eq SigBoolean  SigBoolean              = true
+  eq SigInt      SigInt                  = true
+  eq SigString   SigString               = true
+  eq SigChar     SigChar                 = true
+  eq (SigArray t1) (SigArray t2)         = t1 unit == t2 unit
+  eq _ _                                 = false
+
+eqDataConstructor :: DataConstructor -> DataConstructor -> Boolean
+eqDataConstructor p1 p2 = p1.sigConstructor == p2.sigConstructor
+                       && zipAll (\x y -> x unit == y unit) p1.sigValues p2.sigValues
+
+eqRecordSigs :: forall a. Eq a => Array {recLabel :: String, recValue :: Unit -> a}
+                               -> Array {recLabel :: String, recValue :: Unit -> a}
+                               -> Boolean
+eqRecordSigs arr1 arr2 = length arr1 == length arr2
+                      && zipAll doCmp sorted1 sorted2
+  where
+    labelCompare r1 r2 = compare r1.recLabel r2.recLabel
+    sorted1 = sortBy labelCompare arr1
+    sorted2 = sortBy labelCompare arr2
+    doCmp x y = x.recLabel == y.recLabel && x.recValue unit == y.recValue unit
 
 -- | This function can be used as the default instance for Eq for any instance of Generic
 gEq :: forall a. (Generic a) => a -> a -> Boolean
