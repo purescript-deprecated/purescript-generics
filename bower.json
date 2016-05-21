@@ -1,36 +1,32 @@
 {
   "name": "purescript-generics",
   "homepage": "https://github.com/purescript-contrib/purescript-generics",
+  "description": "Generic programming for PureScript",
   "authors": [
     "Gershom Bazerman <gershomb@gmail.com>"
   ],
-  "description": "Generic programming",
-  "keywords": [
-    "purescript",
-    "generic"
-  ],
-  "moduleType": [
-    "node"
-  ],
   "license": "MIT",
-  "ignore": [
-    "**/.*",
-    "bower_components",
-    "node_modules",
-    "output"
-  ],
   "repository": {
     "type": "git",
     "url": "git://github.com/purescript/purescript-generics.git"
   },
+  "ignore": [
+    "**/.*",
+    "bower_components",
+    "node_modules",
+    "output",
+    "test",
+    "bower.json",
+    "package.json"
+  ],
   "dependencies": {
-    "purescript-arrays": "^0.4.2",
-    "purescript-either": "^0.2.1",
-    "purescript-proxy": "^0.1.0",
-    "purescript-strings": "^0.7.0"
+    "purescript-arrays": "^1.0.0-rc.1",
+    "purescript-either": "^1.0.0-rc.1",
+    "purescript-proxy": "^1.0.0-rc.1",
+    "purescript-strings": "^1.0.0-rc.1"
   },
   "devDependencies": {
-    "purescript-console": "^0.1.0",
-    "purescript-assert": "^0.1.1"
+    "purescript-assert": "^1.0.0-rc.1",
+    "purescript-console": "^1.0.0-rc.1"
   }
 }
