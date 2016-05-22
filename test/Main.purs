@@ -18,13 +18,17 @@ data Foo
   | Baz {a :: Maybe String, bq :: Number} String
   | Corge (Array Char)
 
+derive instance genericFoo :: Generic Foo
+
 data IntList
   = IntList Number IntList
   | NilIntList
 
-derive instance genericFoo :: Generic Foo
-
 derive instance genericIntList :: Generic IntList
+
+data UnitPlus = UnitPlus Unit Unit
+
+derive instance genericUnitPlus :: Generic UnitPlus
 
 instance showFoo :: Show Foo where
   show = gShow

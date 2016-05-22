@@ -76,6 +76,12 @@ instance genericArray :: Generic a => Generic (Array a) where
   fromSpine (SArray x) = traverse (fromSpine <<< force) x
   fromSpine _ = Nothing
 
+instance genericUnit :: Generic Unit where
+  toSpine _ = SUnit
+  toSignature _ = SigUnit
+  fromSpine SUnit = Just unit
+  fromSpine _ = Nothing
+
 instance genericTuple :: (Generic a, Generic b) => Generic (Tuple a b) where
   toSpine (Tuple x y) =
     SProd "Data.Tuple.Tuple" [\_ -> toSpine x, \_ -> toSpine y]
@@ -169,6 +175,7 @@ data GenericSpine
   | SString String
   | SChar Char
   | SArray (Array (Unit -> GenericSpine))
+  | SUnit
 
 instance eqGenericSpine :: Eq GenericSpine where
   eq (SProd s1 arr1) (SProd s2 arr2) =
@@ -180,6 +187,7 @@ instance eqGenericSpine :: Eq GenericSpine where
   eq (SString x) (SString y) = x == y
   eq (SChar x) (SChar y) = x == y
   eq (SArray xs) (SArray ys) = length xs == length ys && zipAll eqThunk xs ys
+  eq SUnit SUnit = true
   eq _ _ = false
 
 instance ordGenericSpine :: Ord GenericSpine where
@@ -213,6 +221,9 @@ instance ordGenericSpine :: Ord GenericSpine where
   compare (SChar _) _ = LT
   compare _ (SChar _) = GT
   compare (SArray xs) (SArray ys) = compare 0 $ zipCompare compareThunk xs ys
+  compare (SArray _) _ = LT
+  compare _ (SArray _) = GT
+  compare SUnit SUnit = EQ
 
 -- | A GenericSignature is a universal representation of the structure of an
 -- | arbitrary data structure (that does not contain function arrows).
@@ -225,6 +236,7 @@ data GenericSignature
   | SigString
   | SigChar
   | SigArray (Unit -> GenericSignature)
+  | SigUnit
 
 instance eqGenericSignature :: Eq GenericSignature where
   eq (SigProd s1 arr1) (SigProd s2 arr2) =
@@ -236,6 +248,7 @@ instance eqGenericSignature :: Eq GenericSignature where
   eq SigString SigString = true
   eq SigChar SigChar = true
   eq (SigArray t1) (SigArray t2) = eqThunk t1 t2
+  eq SigUnit SigUnit = true
   eq _ _ = false
 
 instance showGenericSignature :: Show GenericSignature where
@@ -270,6 +283,7 @@ showSignature sig =
     SigString -> ["SigString"]
     SigChar -> ["SigChar"]
     SigArray sig' -> ["SigArray ", paren (force sig')]
+    SigUnit -> ["SigUnit"]
 
   where
   paren s
@@ -285,6 +299,7 @@ showSignature sig =
     SigString -> false
     SigChar -> false
     SigArray _ -> true
+    SigUnit -> false
 
 -- We use this instead of the default Show Array instance to avoid escaping
 -- strings twice.
@@ -321,6 +336,7 @@ isValidSpine (SigRecord fieldSigs) (SRecord fieldVals) =
     (\sig val -> isValidSpine (force sig.recValue) (force val.recValue))
     (sortBy (\a b -> compare a.recLabel b.recLabel) fieldSigs)
     (sortBy (\a b -> compare a.recLabel b.recLabel) fieldVals)
+isValidSpine SigUnit SUnit = true
 isValidSpine _ _ = false
 
 -- ## Generic Functions
@@ -339,17 +355,18 @@ genericShowPrec d (SProd s arr)
       where
       showParen false x = x
       showParen true  x = "(" <> x <> ")"
-genericShowPrec d (SRecord xs) =
+genericShowPrec _ (SRecord xs) =
   "{" <> joinWith ", " (map showLabelPart xs) <> "}"
   where
   showLabelPart x = x.recLabel <> ": " <> genericShowPrec 0 (force x.recValue)
-genericShowPrec d (SBoolean x) = show x
-genericShowPrec d (SInt x) = show x
-genericShowPrec d (SNumber x) = show x
-genericShowPrec d (SString x) = show x
-genericShowPrec d (SChar x) = show x
-genericShowPrec d (SArray xs) =
+genericShowPrec _ (SBoolean x) = show x
+genericShowPrec _ (SInt x) = show x
+genericShowPrec _ (SNumber x) = show x
+genericShowPrec _ (SString x) = show x
+genericShowPrec _ (SChar x) = show x
+genericShowPrec _ (SArray xs) =
   "[" <> joinWith ", "  (map (\x -> genericShowPrec 0 (force x)) xs) <> "]"
+genericShowPrec _ SUnit = "unit"
 
 -- | This function can be used as an implementation of the `eq` function of `Eq`
 -- | for any type with a `Generic` instance.
