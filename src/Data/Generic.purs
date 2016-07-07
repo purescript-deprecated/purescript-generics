@@ -159,9 +159,9 @@ instance genericOrdering :: Generic Ordering where
       , { sigConstructor: "Data.Ordering.GT", sigValues: [] }
       ]
   fromSpine = case _ of
-    SProd "Data.Either.LT" [] -> Just LT
-    SProd "Data.Either.EQ" [] -> Just EQ
-    SProd "Data.Either.GT" [] -> Just GT
+    SProd "Data.Ordering.LT" [] -> Just LT
+    SProd "Data.Ordering.EQ" [] -> Just EQ
+    SProd "Data.Ordering.GT" [] -> Just GT
     _ -> Nothing
 
 -- | A GenericSpine is a universal representation of an arbitrary data
