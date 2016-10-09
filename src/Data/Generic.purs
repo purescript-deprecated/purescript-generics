@@ -20,9 +20,11 @@ import Data.Array (null, length, sortBy, zipWith)
 import Data.Either (Either(..))
 import Data.Foldable (all, and, find, fold, intercalate)
 import Data.Maybe (Maybe(..))
+import Data.NonEmpty (NonEmpty(..))
 import Data.String (joinWith)
 import Data.Traversable (traverse)
 import Data.Tuple (Tuple(..))
+
 import Type.Proxy (Proxy(..))
 
 -- | The Generic typeclass provides methods for sending data to/from spine
@@ -163,6 +165,28 @@ instance genericOrdering :: Generic Ordering where
     SProd "Data.Ordering.EQ" [] -> Just EQ
     SProd "Data.Ordering.GT" [] -> Just GT
     _ -> Nothing
+
+instance genericNonEmpty :: (Generic (f a), Generic a) => Generic (NonEmpty f a) where
+  toSpine (NonEmpty x xs) =
+    SProd "Data.NonEmpty.NonEmpty" [\_ -> toSpine x, \_ -> toSpine xs]
+  toSignature x =
+    SigProd
+      "Data.NonEmpty.NonEmpty"
+      [ { sigConstructor: "Data.NonEmpty.NonEmpty"
+        , sigValues:
+            [ \_ -> toSignature (headProxy x)
+            , \_ -> toSignature (tailProxy x)
+            ]
+        }
+      ]
+    where
+    headProxy :: Proxy (NonEmpty f a) -> Proxy a
+    headProxy _ = Proxy
+    tailProxy :: Proxy (NonEmpty f a) -> Proxy (f a)
+    tailProxy _ = Proxy
+  fromSpine (SProd "Data.NonEmpty.NonEmpty" [x, xs]) =
+    NonEmpty <$> fromSpine (force x) <*> fromSpine (force xs)
+  fromSpine _ = Nothing
 
 -- | A GenericSpine is a universal representation of an arbitrary data
 -- | structure (that does not contain function arrows).
