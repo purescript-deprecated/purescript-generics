@@ -19,6 +19,7 @@ import Prelude
 import Data.Array (null, length, sortBy, zipWith)
 import Data.Either (Either(..))
 import Data.Foldable (all, and, find, fold, intercalate)
+import Data.Identity (Identity(..))
 import Data.Maybe (Maybe(..))
 import Data.NonEmpty (NonEmpty(..))
 import Data.String (joinWith)
@@ -146,6 +147,21 @@ instance genericEither :: (Generic a, Generic b) => Generic (Either a b) where
     rproxy _ = Proxy
   fromSpine (SProd "Data.Either.Left" [x]) = Left <$> fromSpine (force x)
   fromSpine (SProd "Data.Either.Right" [x]) = Right <$> fromSpine (force x)
+  fromSpine _ = Nothing
+
+instance genericIdentity :: (Generic a) => Generic (Identity a) where
+  toSpine (Identity a) = SProd "Data.Identity.Identity" [\_ -> toSpine a]
+  toSignature x =
+    SigProd
+      "Data.Identity.Identity"
+      [ { sigConstructor: "Data.Identity.Identity"
+        , sigValues: [\_ -> toSignature (iproxy x)]
+        }
+      ]
+    where
+    iproxy :: Proxy (Identity a) -> Proxy a
+    iproxy _ = Proxy
+  fromSpine (SProd "Data.Identity.Identity" [x]) = Identity <$> fromSpine (force x)
   fromSpine _ = Nothing
 
 instance genericOrdering :: Generic Ordering where
