@@ -1,8 +1,7 @@
 # purescript-generics
 
-[![Latest release](http://img.shields.io/bower/v/purescript-generics.svg)](https://github.com/purescript/purescript-generics/releases)
-[![Build Status](https://travis-ci.org/purescript/purescript-generics.svg?branch=master)](https://travis-ci.org/purescript/purescript-generics)
-[![Dependency Status](https://www.versioneye.com/user/projects/5620cd8436d0ab00160009c5/badge.svg?style=flat)](https://www.versioneye.com/user/projects/5620cd8436d0ab00160009c5)
+[![Latest release](http://img.shields.io/github/release/purescript/purescript-generics.svg)](https://github.com/purescript/purescript-generics/releases)
+[![Build status](https://travis-ci.org/purescript/purescript-generics.svg?branch=master)](https://travis-ci.org/purescript/purescript-generics)
 
 Generic programming.
 
