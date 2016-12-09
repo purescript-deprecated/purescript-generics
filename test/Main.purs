@@ -30,6 +30,10 @@ data UnitPlus = UnitPlus Unit Unit
 
 derive instance genericUnitPlus :: Generic UnitPlus
 
+data VoidPlus = VoidPlus Void Void
+
+derive instance genericVoidPlus :: Generic VoidPlus
+
 instance showFoo :: Show Foo where
   show = gShow
 

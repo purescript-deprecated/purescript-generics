@@ -85,6 +85,12 @@ instance genericUnit :: Generic Unit where
   fromSpine SUnit = Just unit
   fromSpine _ = Nothing
 
+instance genericVoid :: Generic Void where
+  toSpine z = SVoid z
+  toSignature _ = SigVoid
+  fromSpine (SVoid z) = Just z
+  fromSpine _ = Nothing
+
 instance genericTuple :: (Generic a, Generic b) => Generic (Tuple a b) where
   toSpine (Tuple x y) =
     SProd "Data.Tuple.Tuple" [\_ -> toSpine x, \_ -> toSpine y]
@@ -216,6 +222,7 @@ data GenericSpine
   | SChar Char
   | SArray (Array (Unit -> GenericSpine))
   | SUnit
+  | SVoid Void
 
 instance eqGenericSpine :: Eq GenericSpine where
   eq (SProd s1 arr1) (SProd s2 arr2) =
@@ -228,6 +235,7 @@ instance eqGenericSpine :: Eq GenericSpine where
   eq (SChar x) (SChar y) = x == y
   eq (SArray xs) (SArray ys) = length xs == length ys && zipAll eqThunk xs ys
   eq SUnit SUnit = true
+  eq (SVoid _) (SVoid _) = true
   eq _ _ = false
 
 instance ordGenericSpine :: Ord GenericSpine where
@@ -264,6 +272,9 @@ instance ordGenericSpine :: Ord GenericSpine where
   compare (SArray _) _ = LT
   compare _ (SArray _) = GT
   compare SUnit SUnit = EQ
+  compare SUnit (SVoid _) = LT
+  compare (SVoid _) (SVoid _) = EQ
+  compare (SVoid _) SUnit = GT
 
 -- | A GenericSignature is a universal representation of the structure of an
 -- | arbitrary data structure (that does not contain function arrows).
@@ -277,6 +288,7 @@ data GenericSignature
   | SigChar
   | SigArray (Unit -> GenericSignature)
   | SigUnit
+  | SigVoid
 
 instance eqGenericSignature :: Eq GenericSignature where
   eq (SigProd s1 arr1) (SigProd s2 arr2) =
@@ -289,6 +301,7 @@ instance eqGenericSignature :: Eq GenericSignature where
   eq SigChar SigChar = true
   eq (SigArray t1) (SigArray t2) = eqThunk t1 t2
   eq SigUnit SigUnit = true
+  eq SigVoid SigVoid = true
   eq _ _ = false
 
 instance showGenericSignature :: Show GenericSignature where
@@ -324,6 +337,7 @@ showSignature sig =
     SigChar -> ["SigChar"]
     SigArray sig' -> ["SigArray ", paren (force sig')]
     SigUnit -> ["SigUnit"]
+    SigVoid -> ["SigVoid"]
 
   where
   paren s
@@ -340,6 +354,7 @@ showSignature sig =
     SigChar -> false
     SigArray _ -> true
     SigUnit -> false
+    SigVoid -> false
 
 -- We use this instead of the default Show Array instance to avoid escaping
 -- strings twice.
@@ -377,6 +392,7 @@ isValidSpine (SigRecord fieldSigs) (SRecord fieldVals) =
     (sortBy (\a b -> compare a.recLabel b.recLabel) fieldSigs)
     (sortBy (\a b -> compare a.recLabel b.recLabel) fieldVals)
 isValidSpine SigUnit SUnit = true
+isValidSpine SigVoid (SVoid _) = true
 isValidSpine _ _ = false
 
 -- ## Generic Functions
@@ -407,6 +423,7 @@ genericShowPrec _ (SChar x) = show x
 genericShowPrec _ (SArray xs) =
   "[" <> joinWith ", "  (map (\x -> genericShowPrec 0 (force x)) xs) <> "]"
 genericShowPrec _ SUnit = "unit"
+genericShowPrec _ (SVoid _) = "void"
 
 -- | This function can be used as an implementation of the `eq` function of `Eq`
 -- | for any type with a `Generic` instance.
