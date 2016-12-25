@@ -87,7 +87,7 @@ instance genericUnit :: Generic Unit where
 
 instance genericVoid :: Generic Void where
   toSpine = absurd
-  toSignature _ = SigVoid
+  toSignature _ = SigProd "Data.Void.Void" []
   fromSpine _ = Nothing
 
 instance genericTuple :: (Generic a, Generic b) => Generic (Tuple a b) where
@@ -282,7 +282,6 @@ data GenericSignature
   | SigChar
   | SigArray (Unit -> GenericSignature)
   | SigUnit
-  | SigVoid
 
 instance eqGenericSignature :: Eq GenericSignature where
   eq (SigProd s1 arr1) (SigProd s2 arr2) =
@@ -295,7 +294,6 @@ instance eqGenericSignature :: Eq GenericSignature where
   eq SigChar SigChar = true
   eq (SigArray t1) (SigArray t2) = eqThunk t1 t2
   eq SigUnit SigUnit = true
-  eq SigVoid SigVoid = true
   eq _ _ = false
 
 instance showGenericSignature :: Show GenericSignature where
@@ -331,7 +329,6 @@ showSignature sig =
     SigChar -> ["SigChar"]
     SigArray sig' -> ["SigArray ", paren (force sig')]
     SigUnit -> ["SigUnit"]
-    SigVoid -> ["SigVoid"]
 
   where
   paren s
@@ -348,7 +345,6 @@ showSignature sig =
     SigChar -> false
     SigArray _ -> true
     SigUnit -> false
-    SigVoid -> false
 
 -- We use this instead of the default Show Array instance to avoid escaping
 -- strings twice.
