@@ -85,6 +85,11 @@ instance genericUnit :: Generic Unit where
   fromSpine SUnit = Just unit
   fromSpine _ = Nothing
 
+instance genericVoid :: Generic Void where
+  toSpine = absurd
+  toSignature _ = SigProd "Data.Void.Void" []
+  fromSpine _ = Nothing
+
 instance genericTuple :: (Generic a, Generic b) => Generic (Tuple a b) where
   toSpine (Tuple x y) =
     SProd "Data.Tuple.Tuple" [\_ -> toSpine x, \_ -> toSpine y]
