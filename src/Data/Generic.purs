@@ -222,6 +222,26 @@ data GenericSpine
   | SArray (Array (Unit -> GenericSpine))
   | SUnit
 
+instance showGenericSpine :: Show GenericSpine
+    where
+        show  SUnit            = "SUnit"
+        show (SChar         c) = "SChar "    <> show  c
+        show (SString       s) = "SString "  <> show  s
+        show (SBoolean      b) = "SBoolean " <> show  b
+        show (SNumber       n) = "SNumber "  <> show  n
+        show (SInt          i) = "SInt "     <> show  i
+        show (SArray      arr) = "SArray "   <> showArray showSuspended arr
+        show (SProd   lbl arr) = "SProd "    <> show  lbl <> " "
+                                             <> showArray showSuspended arr
+        show (SRecord     arr) = "SRecord "  <> showArray showElt       arr
+            where
+                showElt { recLabel: label, recValue: value } =
+                    fold ["{ recLabel: ", show label, ", recValue: ", showSuspended value, "}"]
+
+-- | Shows a lazily evaluated value under a function with `Unit` parameter.
+showSuspended  :: forall a. Show a => (Unit -> a) -> String
+showSuspended e = "\\_->" <> show (e unit)
+
 instance eqGenericSpine :: Eq GenericSpine where
   eq (SProd s1 arr1) (SProd s2 arr2) =
     s1 == s2 && length arr1 == length arr2 && zipAll eqThunk arr1 arr2
@@ -349,6 +369,7 @@ showSignature sig =
 -- We use this instead of the default Show Array instance to avoid escaping
 -- strings twice.
 showArray :: forall a. (a -> String) -> Array a -> String
+showArray _ [] = "[]"
 showArray f xs = "[ " <> intercalate ", " (map f xs) <> " ]"
 
 showLabel
@@ -473,3 +494,4 @@ orderingToInt = case _ of
   EQ -> 0
   LT -> 1
   GT -> -1
+
