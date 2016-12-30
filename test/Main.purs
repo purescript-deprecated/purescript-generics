@@ -66,6 +66,11 @@ main = do
   , Quux ["Hi","Dere"]
   , Baz {a : Just "yo", bq : 22.0} "oy"
   , Corge ['H', 'i', ' ', 'D', 'e', 'r', 'e'] ]
+  logShow $ toSpine [
+    Foo 12.0 "Hello"
+  , Quux ["Hi","Dere"]
+  , Baz {a : Just "yo", bq : 22.0} "oy"
+  , Corge ['H', 'i', ' ', 'D', 'e', 'r', 'e'] ]
   logShow $ gCompare (Bar 12.3) (Foo 34.1 "hello")
   logShow $ gEq
     [ Foo 12.0 "Hello"
