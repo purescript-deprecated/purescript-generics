@@ -236,11 +236,11 @@ instance showGenericSpine :: Show GenericSpine
         show (SRecord     arr) = "SRecord "  <> showArray showElt       arr
             where
                 showElt { recLabel: label, recValue: value } =
-                    fold ["{ recLabel: ", show label, ", recValue: ", showSuspended value, "}"]
+                    fold ["{ recLabel: ", show label, ", recValue: ", showSuspended value, " }"]
 
 -- | Shows a lazily evaluated value under a function with `Unit` parameter.
 showSuspended  :: forall a. Show a => (Unit -> a) -> String
-showSuspended e = "\\_->" <> show (e unit)
+showSuspended e = "\\_ -> " <> show (e unit)
 
 instance eqGenericSpine :: Eq GenericSpine where
   eq (SProd s1 arr1) (SProd s2 arr2) =
@@ -334,7 +334,7 @@ showDataConstructor :: DataConstructor -> String
 showDataConstructor dc =
   "{ sigConstructor: " <> show dc.sigConstructor <>
   ", sigValues: " <> showArray (showSignature <<< force) dc.sigValues <>
-  "}"
+  " }"
 
 showSignature :: GenericSignature -> String
 showSignature sig =
