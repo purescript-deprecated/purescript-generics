@@ -20,6 +20,7 @@ import Data.Array (null, length, sortBy, zipWith)
 import Data.Either (Either(..))
 import Data.Foldable (all, and, find, fold, intercalate)
 import Data.Identity (Identity(..))
+import Data.List.Types as DLT
 import Data.Maybe (Maybe(..))
 import Data.NonEmpty (NonEmpty(..))
 import Data.String (joinWith)
@@ -110,6 +111,50 @@ instance genericTuple :: (Generic a, Generic b) => Generic (Tuple a b) where
     sndProxy _ = Proxy
   fromSpine (SProd "Data.Tuple.Tuple" [x, y]) =
     Tuple <$> fromSpine (force x) <*> fromSpine (force y)
+  fromSpine _ = Nothing
+
+instance genericList :: Generic a => Generic (DLT.List a) where
+  toSpine (DLT.Cons x y) =
+    SProd "Data.List.Types.Cons" [\_ -> toSpine x, \_ -> toSpine y]
+  toSpine DLT.Nil =
+    SProd "Data.List.Types.Nil" []
+  toSignature x =
+    SigProd
+      "Data.List.Types.List"
+      [ { sigConstructor: "Data.List.Types.Cons"
+        , sigValues:
+            [ \_ -> toSignature (headProxy x)
+            , \_ -> toSignature x
+            ]
+        }
+      , { sigConstructor: "Data.List.Types.Nil"
+        , sigValues: []
+        }
+      ]
+    where
+    headProxy :: Proxy (DLT.List a) -> Proxy a
+    headProxy _ = Proxy
+  fromSpine (SProd "Data.List.Types.Cons" [x, y]) =
+    DLT.Cons <$> fromSpine (force x) <*> fromSpine (force y)
+  fromSpine (SProd "Data.List.Types.Nil" []) =
+    pure DLT.Nil
+  fromSpine _ = Nothing
+
+instance genericNonEmptyList :: Generic a => Generic (DLT.NonEmptyList a) where
+  toSpine (DLT.NonEmptyList xs) =
+    SProd "Data.List.Types.NonEmptyList" [\_ -> toSpine xs]
+  toSignature x =
+    SigProd
+      "Data.List.Types.NonEmptyList"
+      [ { sigConstructor: "Data.List.Types.NonEmptyList"
+        , sigValues: [ \_ -> toSignature (listProxy x) ]
+        }
+      ]
+    where
+    listProxy :: Proxy (DLT.NonEmptyList a) -> Proxy (DLT.List a)
+    listProxy _ = Proxy
+  fromSpine (SProd "Data.List.Types.NonEmptyList" [xs]) =
+    DLT.NonEmptyList <$> fromSpine (force xs)
   fromSpine _ = Nothing
 
 instance genericMaybe :: Generic a => Generic (Maybe a) where

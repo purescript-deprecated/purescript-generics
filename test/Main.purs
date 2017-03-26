@@ -53,7 +53,7 @@ derive instance genericNew :: Generic MyNewString
 instance showNewInt :: Show MyNewString where
   show = gShow
 
-toFrom :: forall a. (Generic a) => a -> Maybe a
+toFrom :: forall a. Generic a => a -> Maybe a
 toFrom x = fromSpine (toSpine x)
 
 data Bar = Bar1 Int
