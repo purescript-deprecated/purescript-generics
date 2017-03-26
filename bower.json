@@ -23,6 +23,7 @@
     "purescript-arrays": "^4.0.0",
     "purescript-either": "^3.0.0",
     "purescript-identity": "^3.0.0",
+    "purescript-lists": "^4.0.0",
     "purescript-proxy": "^2.0.0",
     "purescript-strings": "^3.0.0"
   },
