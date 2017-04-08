@@ -1,13 +1,10 @@
 module Test.Main where
 
 import Prelude
-
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Console (CONSOLE, log, logShow)
-
-import Data.Generic (class Generic, toSignature, gEq, gCompare, toSpine, fromSpine, gShow)
+import Data.Generic (class Generic, GenericSignature(..), GenericSpine(..), fromSpine, gCompare, gEq, gShow, toSignature, toSpine, withSignature)
 import Data.Maybe (Maybe(..))
-
 import Test.Assert (ASSERT, assert')
 import Type.Proxy (Proxy(..))
 
@@ -96,3 +93,16 @@ main = do
   assert' "Foo /= Int:" $ toSignature (Proxy :: Proxy Foo) /= toSignature (Proxy :: Proxy Int)
   assert' "Foo /= Array Int:" $ toSignature (Proxy :: Proxy Foo) /= toSignature (Proxy :: Proxy (Array Int))
   assert' "Foo /= Ordering:" $ toSignature (Proxy :: Proxy Foo) /= toSignature (Proxy :: Proxy Ordering)
+  withSignature (SigArray \_ -> SigInt) genericProgram
+  where
+    genericProgram :: forall a. Generic a => Proxy a -> Eff (console :: CONSOLE, assert :: ASSERT) Unit
+    genericProgram pr = do
+      -- We don't have a way to do anything useful here, since we have no way to
+      -- actually construct a value of our type. With something like foreign-generic,
+      -- we might be able to decode JSON to generate a value, or we might write
+      -- a generic function to create a default empty value.
+      -- For now, let's try to create something from an explicit spine:
+      let spine = SArray [\_ -> SInt 1, \_ -> SInt 2, \_ -> SInt 3]
+      case fromSpine spine of
+        Nothing -> assert' "Bad spine" false
+        Just (a :: a) -> log (gShow a)

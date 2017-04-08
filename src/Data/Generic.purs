@@ -9,25 +9,25 @@ module Data.Generic
   , showDataConstructor
   , showSignature
   , isValidSpine
+  , withSignature
   , gShow
   , gEq
   , gCompare
   ) where
 
 import Prelude
-
+import Data.List.Types as DLT
 import Data.Array (null, length, sortBy, zipWith)
 import Data.Either (Either(..))
 import Data.Foldable (all, and, find, fold, intercalate)
 import Data.Identity (Identity(..))
-import Data.List.Types as DLT
 import Data.Maybe (Maybe(..))
 import Data.NonEmpty (NonEmpty(..))
 import Data.String (joinWith)
 import Data.Traversable (traverse)
 import Data.Tuple (Tuple(..))
-
 import Type.Proxy (Proxy(..))
+import Unsafe.Coerce (unsafeCoerce)
 
 -- | The Generic typeclass provides methods for sending data to/from spine
 -- | representations, as well as querying about the signatures of spine
@@ -450,6 +450,35 @@ isValidSpine (SigRecord fieldSigs) (SRecord fieldVals) =
 isValidSpine SigUnit SUnit = true
 isValidSpine _ _ = false
 
+newtype ReflectedSignature s = ReflectedSignature GenericSpine
+
+class ReifiesSignature s where
+  reflectSignature :: Proxy s -> GenericSignature
+
+instance genericReflectedSignature :: ReifiesSignature s => Generic (ReflectedSignature s) where
+  toSpine (ReflectedSignature spine) = spine
+  toSignature _ = reflectSignature (Proxy :: Proxy s)
+  fromSpine spine | isValidSpine (reflectSignature (Proxy :: Proxy s)) spine = Just (ReflectedSignature spine)
+                  | otherwise = Nothing
+
+-- | Create an ad-hoc `Generic` type from a `GenericSignature`.
+withSignature
+  :: forall r
+   . GenericSignature
+  -> (forall a. Generic a => Proxy a -> r)
+  -> r
+withSignature sig f = reifySignature sig (f <<< liftProxy) where
+  liftProxy :: forall s. Proxy s -> Proxy (ReflectedSignature s)
+  liftProxy Proxy = Proxy
+
+reifySignature :: forall r1. GenericSignature -> (forall s. ReifiesSignature s => Proxy s -> r1) -> r1
+reifySignature sig f = coerce f { reflectSignature: \_ -> sig } Proxy where
+  coerce :: (forall s. ReifiesSignature s => Proxy s -> r1)
+         -> { reflectSignature :: Proxy Unit -> GenericSignature }
+         -> Proxy Unit
+         -> r1
+  coerce = unsafeCoerce
+
 -- ## Generic Functions
 
 -- | This function can be used as the default instance for Show for any
@@ -539,4 +568,3 @@ orderingToInt = case _ of
   EQ -> 0
   LT -> 1
   GT -> -1
-
