@@ -6,9 +6,10 @@
     "Gershom Bazerman <gershomb@gmail.com>"
   ],
   "license": "MIT",
+  "keywords": ["pursuit-deprecated"],
   "repository": {
     "type": "git",
-    "url": "git://github.com/purescript/purescript-generics.git"
+    "url": "https://github.com/purescript/purescript-generics.git"
   },
   "ignore": [
     "**/.*",

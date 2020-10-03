@@ -1,24 +1,5 @@
-# purescript-generics
+# DEPRECATED
 
-[![Latest release](http://img.shields.io/github/release/purescript/purescript-generics.svg)](https://github.com/purescript/purescript-generics/releases)
-[![Build status](https://travis-ci.org/purescript/purescript-generics.svg?branch=master)](https://travis-ci.org/purescript/purescript-generics)
+The library is no longer maintained. The compiler dropped support for deriving this style of `Generic` in v0.12, the newer style `Generic`s are available in [`purescript-generics-rep`](https://github.com/purescript/purescript-generics-rep).
 
-Generic programming.
-
-## Usage
-
-```
-bower install purescript-generics
-```
-
-The methods in the `Generic` type class can be derived in versions >= 0.7.3 of the PureScript compiler with the following syntax:
-
-``` purescript
-derive instance genericMyType :: Generic MyType
-```
-
-There are some example usages of the library [in the tests](test/Main.purs).
-
-## Documentation
-
-Module documentation is [published on Pursuit](http://pursuit.purescript.org/packages/purescript-generics).
+[The previous releases](https://github.com/purescript-deprecated/purescript-generics/releases) will continue to work for older libraries that still depend on them.
